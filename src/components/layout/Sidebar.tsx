@@ -21,7 +21,8 @@ export type ViewType =
   | 'follow-ups'
   | 'replies'
   | 'analytics'
-  | 'settings';
+  | 'settings'
+  | 'templates';
 
 interface SidebarProps {
   currentView: ViewType;
@@ -99,6 +100,34 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
             </button>
           );
         })}
+
+        <div className="pt-3">
+          <div className="px-2 py-1 text-[11px] font-semibold uppercase tracking-wider text-gray-400">
+            Outreach Design
+          </div>
+          <button
+            onClick={() => onNavigate('templates')}
+            className={cn(
+              'group flex w-full items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+              currentView === 'templates'
+                ? 'bg-blue-50 text-blue-700 font-semibold'
+                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+            )}
+          >
+            <div className="flex items-center gap-3">
+              <Sparkles
+                className={cn(
+                  'h-4 w-4 transition-colors',
+                  currentView === 'templates' ? 'text-blue-700' : 'text-gray-400 group-hover:text-gray-600'
+                )}
+              />
+              <span>Email Templates</span>
+            </div>
+            <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-semibold text-blue-800">
+              20
+            </span>
+          </button>
+        </div>
       </nav>
 
       {/* Footer Info Box */}

@@ -31,7 +31,7 @@ fs.copyFileSync(path.join(siteDir, 'index.html'), path.join(distDir, 'landing.ht
 fs.copyFileSync(path.join(siteDir, 'index.html'), path.join(distDir, 'home', 'index.html'));
 
 // App routes to mirror for SPA routing without 404
-const appRoutes = ['accounts', 'contacts', 'campaigns', 'follow-ups', 'replies', 'analytics', 'settings'];
+const appRoutes = ['accounts', 'contacts', 'campaigns', 'follow-ups', 'replies', 'analytics', 'settings', 'templates'];
 const mainAppHtml = path.join(distDir, 'index.html');
 
 appRoutes.forEach((route) => {

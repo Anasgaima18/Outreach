@@ -27,13 +27,58 @@ function interpolateVariables(
     email?: string | null;
   }
 ): string {
-  return template
-    .replace(/\{\{\s*first_name\s*\}\}/gi, vars.first_name || 'Professor')
-    .replace(/\{\{\s*last_name\s*\}\}/gi, vars.last_name || '')
-    .replace(/\{\{\s*full_name\s*\}\}/gi, vars.full_name || 'Professor')
-    .replace(/\{\{\s*institution\s*\}\}/gi, vars.institution || 'your institution')
-    .replace(/\{\{\s*department\s*\}\}/gi, vars.department || 'your department')
-    .replace(/\{\{\s*academic_role\s*\}\}/gi, vars.academic_role || 'Educator')
+  let resolved = template;
+
+  const hasLastName = Boolean(vars.last_name && vars.last_name.trim());
+  const hasFirstName = Boolean(vars.first_name && vars.first_name.trim());
+  const hasFullName = Boolean(vars.full_name && vars.full_name.trim() && !vars.full_name.includes('@'));
+  const hasInstitution = Boolean(vars.institution && vars.institution.trim());
+  const hasDepartment = Boolean(vars.department && vars.department.trim());
+
+  // 1. Salutation handling - never produce "Dear Professor ," or "Dear Professor Colleague," or "Dear Professor/dean,"
+  if (hasLastName) {
+    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Dear Professor ${vars.last_name!.trim()},`);
+  } else if (hasFirstName) {
+    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Hi ${vars.first_name!.trim()},`);
+  } else if (hasFullName) {
+    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Hi ${vars.full_name!.trim()},`);
+  } else {
+    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, 'Hello,');
+    resolved = resolved.replace(/Dear Professor\/dean,?/gi, 'Hello,');
+  }
+
+  // 2. Department & institution combination phrases - prevent "in the your department at your institution"
+  if (!hasDepartment && !hasInstitution) {
+    resolved = resolved
+      .replace(/in the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, 'in higher education')
+      .replace(/for\s*\{\{\s*institution\s*\}\}\s*(?:lectures|classes|students)?/gi, 'for university lectures')
+      .replace(/at\s*\{\{\s*institution\s*\}\}/gi, 'at your university');
+  } else if (!hasDepartment && hasInstitution) {
+    resolved = resolved
+      .replace(/in the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `at ${vars.institution!.trim()}`)
+      .replace(/for\s*\{\{\s*institution\s*\}\}/gi, `for ${vars.institution!.trim()}`);
+  } else if (hasDepartment && !hasInstitution) {
+    resolved = resolved
+      .replace(/in the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `in ${vars.department!.trim()}`)
+      .replace(/for\s*\{\{\s*institution\s*\}\}/gi, 'for your courses');
+  }
+
+  // 3. Fallbacks for remaining placeholders
+  const inst = hasInstitution ? vars.institution!.trim() : 'your university';
+  const dept = hasDepartment ? vars.department!.trim() : 'your department';
+  const role = vars.academic_role?.trim() || 'Educator';
+  const fname = hasFirstName ? vars.first_name!.trim() : (hasFullName ? vars.full_name!.trim().split(' ')[0] : 'Colleague');
+  const lname = hasLastName ? vars.last_name!.trim() : '';
+  const fullName = hasFullName ? vars.full_name!.trim() : (hasFirstName ? vars.first_name!.trim() : 'Educator');
+
+  return resolved
+    .replace(/\{\{\s*first_name\s*\}\}/gi, fname)
+    .replace(/\{\{\s*last_name\s*\}\}/gi, lname)
+    .replace(/\{\{\s*full_name\s*\}\}/gi, fullName)
+    .replace(/\{\{\s*institution\s*\}\}/gi, inst)
+    .replace(/\{\{\s*department\s*\}\}/gi, dept)
+    .replace(/\{\{\s*academic_role\s*\}\}/gi, role)
+    .replace(/\{\{\s*designation\s*\}\}/gi, role)
     .replace(/\{\{\s*email\s*\}\}/gi, vars.email || '');
 }
 
@@ -301,6 +346,10 @@ serve(async (req: Request) => {
           ? interpolateVariables(item.campaign_body_html, vars)
           : undefined;
 
+        // Deliverability Safeguard: Do NOT inject synthetic Message-ID for Gmail accounts.
+        // When sending through Gmail API, omitting Message-ID lets Google's mail server generate
+        // its own canonical <...@mail.gmail.com> Message-ID, signed by Google's DKIM keys.
+        // Injecting an external synthetic ID on @gmail.com accounts is a major trigger for spam flagging.
         const rawMimeBase64 = buildRawEmail({
           fromName: item.sender_name || undefined,
           fromEmail: item.sender_email,
@@ -308,7 +357,7 @@ serve(async (req: Request) => {
           toEmail: item.recipient_email,
           subject: personalizedSubject,
           bodyText: personalizedBodyText,
-          bodyHtml: personalizedBodyHtml,
+          bodyHtml: personalizedBodyHtml || undefined,
         });
 
         // --- 5. Submit to Google Gmail API ---

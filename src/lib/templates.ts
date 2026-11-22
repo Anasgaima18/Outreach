@@ -33,8 +33,8 @@ export const GAMIFYTL_BRAND = {
   supportEmail: 'support@northnode.live',
   website: 'https://gamifytl.com/',
   joinUrl: 'https://gamifytl.com/join',
-  logoStandard: 'https://gamifytl.com/email-logo.png',
-  logoWhite: 'https://gamifytl.com/email-logo-on-dark.png',
+  logoStandard: 'https://gamifytl.com/email-logo.webp',
+  logoWhite: 'https://gamifytl.com/email-logo-on-dark.webp',
   address: 'Garden City University, Battarahalli, Bengaluru, Karnataka 560049',
   gstin: '29DHYPN1328C1Z0',
   colors: {
@@ -66,7 +66,10 @@ export function emailBrandMarkHtml(logoUrl: string = GAMIFYTL_BRAND.logoWhite): 
   return `<table role="presentation" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border-spacing:0;margin:0;">
   <tr>
     <td valign="middle" style="padding:0;font-size:0;line-height:0;">
-      <img src="${logoUrl}" width="34" height="34" alt="GamifyTL" style="display:block;width:34px;height:34px;border:0;outline:none;text-decoration:none;" />
+      <picture>
+        <source srcset="${logoUrl}" type="image/webp" />
+        <img src="${logoUrl}" width="34" height="34" alt="GamifyTL" style="display:block;width:34px;height:34px;border:0;outline:none;text-decoration:none;" />
+      </picture>
     </td>
     <td valign="middle" style="padding:0 0 0 4px;font-size:0;line-height:0;">
       <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:34px;font-weight:900;letter-spacing:-0.6px;color:#ffffff;">amify</span><span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:34px;font-weight:900;letter-spacing:-0.6px;color:#ff3b30;">TL</span>
@@ -291,9 +294,9 @@ export const TEMPLATE_2_BRANDED_HTML: EmailTemplate = {
   name: 'Official GamifyTL Branded Invitation (HTML)',
   format: 'html',
   category: 'branded',
-  isDefault: true,
+  isDefault: false,
   description: 'Visually branded introduction to GamifyTL featuring the official dark header, white logo, red CTA button, email-safe table layout, and automatic plain-text fallback.',
-  subject: 'GamifyTL for {{institution}}: Zero-Install Classroom Engagement',
+  subject: 'GamifyTL: Zero-Install Classroom Engagement for {{department}}',
   bodyText: `Dear Professor {{last_name}},
 
 We noticed your teaching in the {{department}} at {{institution}}. Maintaining sustained student attention during technical lectures can be challenging, especially with smartphone distraction.
@@ -449,7 +452,27 @@ export function interpolateVariables(
   const website = contact?.website?.trim() || '';
   const email = contact?.email?.trim() || '';
 
-  return text
+  let resolved = text;
+
+  // Clean single-line greeting resolution when template has "Dear Professor {{last_name}},"
+  if (!contact?.last_name?.trim()) {
+    if (contact?.first_name?.trim()) {
+      resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Hi ${contact.first_name.trim()},`);
+    } else if (contact?.full_name?.trim() && !contact.full_name.includes('@')) {
+      resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Hi ${contact.full_name.trim()},`);
+    } else {
+      resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, 'Dear Professor Colleague,');
+    }
+  }
+
+  // Prevent awkward "in the your department at your institution" bot phrases
+  resolved = resolved
+    .replace(/in the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, 
+      contact?.department && contact?.institution 
+        ? `in the ${contact.department} at ${contact.institution}`
+        : (contact?.institution ? `at ${contact.institution}` : (contact?.department ? `in ${contact.department}` : 'in higher education')));
+
+  return resolved
     .replace(/\{\{\s*first_name\s*\}\}/gi, firstName)
     .replace(/\{\{\s*last_name\s*\}\}/gi, lastName)
     .replace(/\{\{\s*full_name\s*\}\}/gi, fullName)
@@ -457,6 +480,7 @@ export function interpolateVariables(
     .replace(/\{\{\s*department\s*\}\}/gi, department)
     .replace(/\{\{\s*country\s*\}\}/gi, country)
     .replace(/\{\{\s*academic_role\s*\}\}/gi, academicRole)
+    .replace(/\{\{\s*designation\s*\}\}/gi, academicRole)
     .replace(/\{\{\s*website\s*\}\}/gi, website)
     .replace(/\{\{\s*email\s*\}\}/gi, email);
 }

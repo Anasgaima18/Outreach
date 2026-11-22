@@ -9,18 +9,20 @@ import { FollowUpsPage } from './pages/FollowUpsPage';
 import { RepliesPage } from './pages/RepliesPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { TemplatesPage } from './pages/TemplatesPage';
+import type { ProfessionalTemplate } from './types/templates.types';
 
 export function App() {
   const getInitialView = (): ViewType => {
     if (typeof window !== 'undefined') {
       const params = new URLSearchParams(window.location.search);
       const viewParam = params.get('view') as ViewType;
-      if (viewParam && ['dashboard', 'accounts', 'contacts', 'campaigns', 'follow-ups', 'replies', 'analytics', 'settings'].includes(viewParam)) {
+      if (viewParam && ['dashboard', 'accounts', 'contacts', 'campaigns', 'follow-ups', 'replies', 'analytics', 'settings', 'templates'].includes(viewParam)) {
         return viewParam;
       }
 
       const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
-      if (['dashboard', 'accounts', 'contacts', 'campaigns', 'follow-ups', 'replies', 'analytics', 'settings'].includes(path)) {
+      if (['dashboard', 'accounts', 'contacts', 'campaigns', 'follow-ups', 'replies', 'analytics', 'settings', 'templates'].includes(path)) {
         return path as ViewType;
       }
     }
@@ -28,6 +30,12 @@ export function App() {
   };
 
   const [currentView, setCurrentView] = useState<ViewType>(getInitialView);
+  const [, setSelectedTemplate] = useState<ProfessionalTemplate | null>(null);
+
+  const handleSelectTemplateForCampaign = (template: ProfessionalTemplate) => {
+    setSelectedTemplate(template);
+    setCurrentView('campaigns');
+  };
 
   const renderView = () => {
     switch (currentView) {
@@ -47,6 +55,8 @@ export function App() {
         return <AnalyticsPage />;
       case 'settings':
         return <SettingsPage />;
+      case 'templates':
+        return <TemplatesPage onSelectForCampaign={handleSelectTemplateForCampaign} />;
       default:
         return <DashboardPage onNavigate={setCurrentView} />;
     }

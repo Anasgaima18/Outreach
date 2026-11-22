@@ -146,7 +146,7 @@ export function useCampaigns() {
       if (recipientInserts.length > 0) {
         const { error: recipError } = await supabase
           .from('campaign_recipients')
-          .insert(recipientInserts);
+          .upsert(recipientInserts, { onConflict: 'campaign_id,contact_id' });
 
         if (recipError) throw recipError;
       }

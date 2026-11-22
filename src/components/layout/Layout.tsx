@@ -17,6 +17,7 @@ const viewTitles: Record<ViewType, string> = {
   replies: 'Professor Replies',
   analytics: 'Outreach Analytics',
   settings: 'Platform Settings',
+  templates: 'Email Template Library',
 };
 
 export function Layout({ currentView, onNavigate, children }: LayoutProps) {

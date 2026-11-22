@@ -238,15 +238,16 @@ export function useContacts() {
           },
           { onConflict: 'user_id,email' }
         )
-        .select()
-        .single();
+        .select();
 
       if (insertError) throw insertError;
       await fetchContacts();
-      return { success: true, contact: data };
+      const savedContact = data && data.length > 0 ? data[0] : undefined;
+      return { success: true, contact: savedContact };
     } catch (err: unknown) {
       const msg =
         (err as { message?: string })?.message ||
+        (err as { details?: string })?.details ||
         (err instanceof Error ? err.message : 'Error adding contact');
       return { success: false, error: msg };
     }

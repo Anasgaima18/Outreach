@@ -174,8 +174,7 @@ function normalizeLineEndings(text: string): string {
  */
 export function buildRfc2822Mime(params: EmailParams): string {
   const dateStr = (params.date || new Date()).toUTCString();
-  const rawMsgId = params.messageId || `<gamifytl-${crypto.randomUUID()}@gamifytl.com>`;
-  const messageId = sanitizeHeaderAtom(rawMsgId);
+  const rawMsgId = params.messageId;
   const boundary = `====_GamifyTL_Boundary_${crypto.randomUUID().replace(/-/g, '')}_====`;
 
   const headers: string[] = [
@@ -183,9 +182,13 @@ export function buildRfc2822Mime(params: EmailParams): string {
     foldHeader('To', formatAddress(params.toEmail, params.toName)),
     foldHeader('Subject', encodeHeaderValue(params.subject)),
     `Date: ${dateStr}`,
-    `Message-ID: ${messageId}`,
     'MIME-Version: 1.0',
   ];
+
+  if (rawMsgId) {
+    const messageId = sanitizeHeaderAtom(rawMsgId);
+    headers.push(`Message-ID: ${messageId}`);
+  }
 
   if (params.inReplyTo) {
     const cleanInReplyTo = sanitizeHeaderAtom(params.inReplyTo);
