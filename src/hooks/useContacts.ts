@@ -409,9 +409,28 @@ export function useContacts() {
         return;
       }
 
-      const firstName = mappedRow.first_name || '';
-      const lastName = mappedRow.last_name || '';
+      let firstName = mappedRow.first_name || '';
+      let lastName = mappedRow.last_name || '';
       const fullName = mappedRow.full_name || `${firstName} ${lastName}`.trim() || email.split('@')[0];
+
+      // Automatically split full_name into first_name and last_name if missing
+      if ((!firstName || !lastName) && fullName && !fullName.includes('@')) {
+        let cleaned = fullName;
+        const titles = ['dr.', 'prof.', 'professor', 'assoc. prof.', 'assistant professor', 'mr.', 'ms.', 'mrs.'];
+        for (const t of titles) {
+          if (cleaned.toLowerCase().startsWith(t)) {
+            cleaned = cleaned.slice(t.length).trim();
+          }
+        }
+        const parts = cleaned.split(/\s+/).filter(Boolean);
+        if (parts.length === 1) {
+          firstName = firstName || parts[0];
+          lastName = lastName || parts[0];
+        } else if (parts.length >= 2) {
+          firstName = firstName || parts[0];
+          lastName = lastName || parts[parts.length - 1];
+        }
+      }
 
       validRows.push({
         user_id: '00000000-0000-0000-0000-000000000000',
@@ -426,7 +445,7 @@ export function useContacts() {
         website: mappedRow.website || null,
         notes: mappedRow.notes || null,
         status: 'active' as ContactStatus,
-        contact_source: 'csv_import',
+        contact_source: mappedRow.contact_source || 'csv_import',
       });
     });
 

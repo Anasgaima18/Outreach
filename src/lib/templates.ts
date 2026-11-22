@@ -608,9 +608,15 @@ export function validatePersonalizationFields(
     if (regex.test(templateText)) {
       usedVariables.push(item.tag);
 
-      // Check how many contacts lack this field
+      // Check how many contacts lack this field (with smart full_name derivation for names)
       const missingContacts = contacts.filter((c) => {
-        const val = (c as Record<string, unknown>)[item.field];
+        let val = (c as Record<string, unknown>)[item.field];
+        if ((item.field === 'last_name' || item.field === 'first_name') && (!val || typeof val !== 'string' || !val.trim())) {
+          const fullName = (c as Record<string, unknown>)['full_name'];
+          if (typeof fullName === 'string' && fullName.trim() && !fullName.includes('@')) {
+            val = fullName.trim();
+          }
+        }
         return typeof val !== 'string' || !val.trim();
       });
 
