@@ -122,16 +122,34 @@ serve(async (req: Request) => {
       });
     }
 
-    // --- MODE 2: Automated Gmail Sync (when account_id is provided) ---
-    if (!account_id) {
-      return jsonResponse({ error: 'account_id or manual_reply payload is required' }, 400);
+    // --- MODE 2: Automated Gmail Sync ---
+    let targetAccountId = account_id;
+    if (!targetAccountId) {
+      const { data: defaultAcc } = await supabase
+        .from('connected_accounts')
+        .select('id')
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      targetAccountId = defaultAcc?.id;
+    }
+
+    if (!targetAccountId) {
+      return jsonResponse({
+        synced: 0,
+        scope_status: 'no_active_account',
+        notice: 'No active email account connected. Manual reply logging is active.',
+        replies: [],
+      }, 200);
     }
 
     // Verify account existence and extract tenant user_id
     const { data: connectedAccount, error: accError } = await supabase
       .from('connected_accounts')
       .select('id, user_id, email')
-      .eq('id', account_id)
+      .eq('id', targetAccountId)
       .single();
 
     if (accError || !connectedAccount) {
@@ -142,7 +160,7 @@ serve(async (req: Request) => {
     const { data: refreshToken, error: rpcError } = await supabase.rpc(
       'get_decrypted_refresh_token',
       {
-        p_account_id: account_id,
+        p_account_id: targetAccountId,
         p_encryption_key: encryptionKey,
       }
     );
@@ -235,7 +253,7 @@ serve(async (req: Request) => {
           contact_id: matchedContact.id,
           campaign_id: matchedRecipient?.campaign_id || null,
           recipient_id: matchedRecipient?.id || null,
-          account_id,
+          account_id: targetAccountId,
           gmail_message_id: msg.id,
           gmail_thread_id: msg.threadId,
           sender_email: senderEmail,
@@ -264,7 +282,7 @@ serve(async (req: Request) => {
           await supabase.from('email_events').insert({
             campaign_id: matchedRecipient.campaign_id,
             recipient_id: matchedRecipient.id,
-            account_id,
+            account_id: targetAccountId,
             event_type: 'reply_received',
             metadata: { source: 'api_sync', gmail_message_id: msg.id },
           });

@@ -87,13 +87,23 @@ export function RepliesPage() {
     setSyncing(true);
     setSyncMessage(null);
     try {
+      const activeAccount = accounts.find((a) => a.status === 'active') || accounts[0];
+      if (!activeAccount) {
+        setSyncMessage('Sync notice: No active email account connected. Use manual reply logging.');
+        return;
+      }
+
       const { data, error: syncErr } = await supabase.functions.invoke('sync-replies', {
-        body: {},
+        body: { account_id: activeAccount.id },
       });
       if (syncErr) throw syncErr;
-      setSyncMessage(
-        `Sync completed: ${data?.synced_count ?? 0} new replies retrieved.`
-      );
+
+      if (data?.notice) {
+        setSyncMessage(data.notice);
+      } else {
+        const count = data?.synced_count ?? data?.synced ?? 0;
+        setSyncMessage(`Sync completed: ${count} new replies retrieved.`);
+      }
       await fetchReplies();
     } catch (err: unknown) {
       // Free-tier compliant notice: Testing mode without restricted scopes
