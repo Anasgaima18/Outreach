@@ -1,0 +1,66 @@
+{
+  "total_researched": 693,
+  "total_verified": 200,
+  "total_excluded": 493,
+  "by_country": {
+    "United States": 70,
+    "Canada": 85,
+    "United Kingdom": 45
+  },
+  "by_institution": {
+    "University of Illinois Urbana-Champaign": 70,
+    "University of British Columbia": 45,
+    "University of Toronto": 40,
+    "University of Edinburgh": 30,
+    "University of Oxford": 15
+  },
+  "by_source": {
+    "Official UIUC Siebel School Faculty Directory": 70,
+    "Official UBC Computer Science Faculty Directory": 45,
+    "Official University of Toronto Faculty Directory": 40,
+    "Official University of Edinburgh Informatics Directory": 30,
+    "Official University of Oxford Department of Computer Science Directory": 15
+  },
+  "by_discipline_top": [
+    [
+      "Computer Science & Engineering",
+      68
+    ],
+    [
+      "Informatics & Computing",
+      18
+    ],
+    [
+      "Computer Science",
+      15
+    ],
+    [
+      "Artificial Intelligence",
+      7
+    ],
+    [
+      "Machine Learning",
+      6
+    ],
+    [
+      "Systems & Networking",
+      5
+    ],
+    [
+      "Computer Science Education",
+      4
+    ],
+    [
+      "Software Engineering",
+      4
+    ],
+    [
+      "Theoretical Computer Science",
+      4
+    ],
+    [
+      "Systems & Networking , Security & Privacy",
+      3
+    ]
+  ]
+}
