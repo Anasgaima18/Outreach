@@ -103,8 +103,9 @@ export function CsvImportModal({
     { value: 'department', label: 'Department' },
     { value: 'academic_role', label: 'Academic Role / Title' },
     { value: 'country', label: 'Country' },
-    { value: 'website', label: 'Academic Website' },
-    { value: 'notes', label: 'Notes' },
+    { value: 'website', label: 'Academic Website / Profile' },
+    { value: 'contact_source', label: 'Source / Directory' },
+    { value: 'notes', label: 'Notes / Relevance' },
   ];
 
   return (
@@ -185,9 +186,17 @@ export function CsvImportModal({
         {/* STEP 2: Column Mapping */}
         {step === 'mapping' && (
           <div className="space-y-4 py-2">
-            <div className="flex items-center justify-between text-xs text-gray-600 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-gray-600 bg-blue-50/50 p-2.5 rounded-lg border border-blue-100">
               <span>Detected <strong>{headers.length}</strong> columns and <strong>{rawRows.length}</strong> rows from {fileName || 'CSV'}.</span>
-              <span className="text-blue-700 font-semibold">Email field is mandatory.</span>
+              {Object.values(mapping).includes('email') ? (
+                <span className="inline-flex items-center gap-1.5 text-emerald-700 font-semibold bg-emerald-100/70 px-2.5 py-0.5 rounded-full text-xs self-start sm:self-auto">
+                  <CheckCircle2 className="h-3.5 w-3.5" /> Email column ready ({Object.keys(mapping).find((k) => mapping[k] === 'email')})
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1.5 text-amber-700 font-semibold bg-amber-100/70 px-2.5 py-0.5 rounded-full text-xs self-start sm:self-auto">
+                  <AlertTriangle className="h-3.5 w-3.5" /> Select email column to proceed
+                </span>
+              )}
             </div>
 
             <div className="max-h-72 overflow-y-auto space-y-2 pr-1">

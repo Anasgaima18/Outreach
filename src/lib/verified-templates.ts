@@ -13,8 +13,8 @@
 
 import type { ProfessionalTemplate } from '../types/templates.types';
 
-export const OFFICIAL_WEBP_LOGO = '/email-logo.webp';
-export const OFFICIAL_WEBP_LOGO_DARK = '/email-logo-on-dark.webp';
+export const OFFICIAL_WEBP_LOGO = 'https://gamifytl.com/email-logo.png';
+export const OFFICIAL_WEBP_LOGO_DARK = 'https://gamifytl.com/email-logo.png';
 
 function wrapAccessibleHtml(params: {
   title: string;
@@ -65,10 +65,7 @@ function wrapAccessibleHtml(params: {
                 <table role="presentation" cellspacing="0" cellpadding="0">
                   <tr>
                     <td valign="middle">
-                      <picture>
-                        <source srcset="${OFFICIAL_WEBP_LOGO}" type="image/webp" />
-                        <img src="https://gamifytl.com/email-logo.png" width="28" height="28" alt="GamifyTL Brand Logo" style="display: block; width: 28px; height: 28px; border: 0;" />
-                      </picture>
+                      <img src="${OFFICIAL_WEBP_LOGO}" width="28" height="28" alt="GamifyTL Brand Logo" style="display: block; width: 28px; height: 28px; border: 0; outline: none;" />
                     </td>
                     <td valign="middle" style="padding-left: 8px; font-size: 18px; font-weight: 700; color: #202124; letter-spacing: -0.3px;">
                       Gamify<span style="color: #ff3b30;">TL</span>

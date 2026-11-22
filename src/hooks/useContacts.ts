@@ -90,16 +90,51 @@ export function parseCsvText(csvText: string): CsvParsedResult {
  */
 export function autoMapHeader(header: string): string {
   const lower = header.toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (lower.includes('email')) return 'email';
+
+  // Prevent URL sources that contain 'email' (e.g. 'Email Source URL') from overriding actual email
+  if (lower.includes('emailsource') || lower.includes('sourceurl')) return 'contact_source';
+
+  // Academic Profile / Websites
+  if (lower.includes('facultyprofile') || lower.includes('profileurl') || lower.includes('website')) return 'website';
+  if (lower.includes('url')) return 'website';
+
+  // Primary Email address mapping
+  if (
+    lower === 'email' ||
+    lower === 'institutionalemail' ||
+    lower.includes('emailaddress') ||
+    lower.includes('primaryemail') ||
+    (lower.includes('email') && !lower.includes('source'))
+  ) {
+    return 'email';
+  }
+
+  // Name fields
   if (lower === 'firstname' || lower === 'first') return 'first_name';
   if (lower === 'lastname' || lower === 'last') return 'last_name';
   if (lower === 'fullname' || lower === 'name') return 'full_name';
+
+  // Institutional and Academic fields
   if (lower.includes('university') || lower.includes('institution') || lower.includes('school')) return 'institution';
   if (lower.includes('department') || lower.includes('dept')) return 'department';
-  if (lower.includes('role') || lower.includes('title') || lower.includes('designation')) return 'academic_role';
+  if (
+    lower.includes('designation') ||
+    lower === 'role' ||
+    lower.includes('academicrole') ||
+    lower.includes('academicdesignation') ||
+    lower.includes('title')
+  ) {
+    return 'academic_role';
+  }
+
   if (lower.includes('country')) return 'country';
-  if (lower.includes('website') || lower.includes('url')) return 'website';
-  if (lower.includes('notes') || lower.includes('note')) return 'notes';
+
+  // Personalization Relevance and Notes
+  if (lower.includes('relevance') || lower.includes('notes') || lower.includes('note')) return 'notes';
+
+  // Contact Source / Directory reference
+  if (lower.includes('source') || lower.includes('directory')) return 'contact_source';
+
   return '';
 }
 

@@ -107,6 +107,8 @@ export function CampaignWizard({
   );
   const [visualCtaLabel, setVisualCtaLabel] = useState('Explore GamifyTL Live Demo');
   const [visualCtaUrl, setVisualCtaUrl] = useState('https://gamifytl.com/');
+  const [visualSenderName, setVisualSenderName] = useState(() => accounts[0]?.display_name || 'Mohammed Anas');
+  const [visualSenderTitle, setVisualSenderTitle] = useState('Founder, GamifyTL · NorthNode Technologies');
 
   const syncVisualToHtml = (updates?: Partial<{
     salutation: string;
@@ -119,6 +121,8 @@ export function CampaignWizard({
     b3Text: string;
     ctaLabel: string;
     ctaUrl: string;
+    senderName: string;
+    senderTitle: string;
   }>) => {
     const sal = updates?.salutation ?? visualSalutation;
     const lead = updates?.leadText ?? visualLeadText;
@@ -130,6 +134,8 @@ export function CampaignWizard({
     const b3X = updates?.b3Text ?? visualB3Text;
     const ctaL = updates?.ctaLabel ?? visualCtaLabel;
     const ctaU = updates?.ctaUrl ?? visualCtaUrl;
+    const senderN = updates?.senderName ?? visualSenderName;
+    const senderT = updates?.senderTitle ?? visualSenderTitle;
 
     const leadHtml = lead
       .split('\n\n')
@@ -186,7 +192,8 @@ export function CampaignWizard({
         </a>
       </div>
       <p style="margin:0 0 4px;font-size:13px;line-height:1.6;color:#5f6368;">Sincerely,</p>
-      <p style="margin:0;font-size:13px;line-height:1.6;color:#111111;font-weight:700;">GamifyTL Academic Outreach Team</p>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#111111;font-weight:700;">${senderN}</p>
+      <p style="margin:0;font-size:12px;line-height:1.5;color:#5f6368;">${senderT}</p>
     `;
 
     const fullHtml = buildBrandedEmailHtml({
@@ -197,7 +204,7 @@ export function CampaignWizard({
 
     setBodyHtml(fullHtml);
     setBodyText(
-      `${sal}\n\n${lead}\n\n- ${b1T}: ${b1X}\n- ${b2T}: ${b2X}\n- ${b3T}: ${b3X}\n\n${ctaL}: ${ctaU}\n\nSincerely,\nGamifyTL Academic Outreach Team\nsupport@northnode.live\nhttps://gamifytl.com/`
+      `${sal}\n\n${lead}\n\n- ${b1T}: ${b1X}\n- ${b2T}: ${b2X}\n- ${b3T}: ${b3X}\n\n${ctaL}: ${ctaU}\n\nSincerely,\n${senderN}\n${senderT}\nhttps://gamifytl.com/`
     );
   };
 
@@ -1333,6 +1340,27 @@ export function CampaignWizard({
                       onChange={(e) => {
                         setVisualCtaUrl(e.target.value);
                         syncVisualToHtml({ ctaUrl: e.target.value });
+                      }}
+                    />
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2 pt-2 border-t border-blue-100/70">
+                    <Input
+                      label="Personal Sender Name"
+                      placeholder="e.g. Mohammed Anas"
+                      value={visualSenderName}
+                      onChange={(e) => {
+                        setVisualSenderName(e.target.value);
+                        syncVisualToHtml({ senderName: e.target.value });
+                      }}
+                    />
+                    <Input
+                      label="Personal Role / Title"
+                      placeholder="e.g. Founder, GamifyTL · NorthNode Technologies"
+                      value={visualSenderTitle}
+                      onChange={(e) => {
+                        setVisualSenderTitle(e.target.value);
+                        syncVisualToHtml({ senderTitle: e.target.value });
                       }}
                     />
                   </div>

@@ -33,8 +33,8 @@ export const GAMIFYTL_BRAND = {
   supportEmail: 'support@northnode.live',
   website: 'https://gamifytl.com/',
   joinUrl: 'https://gamifytl.com/join',
-  logoStandard: 'https://gamifytl.com/email-logo.webp',
-  logoWhite: 'https://gamifytl.com/email-logo-on-dark.webp',
+  logoStandard: 'https://gamifytl.com/email-logo.png',
+  logoWhite: 'https://gamifytl.com/email-logo.png',
   address: 'Garden City University, Battarahalli, Bengaluru, Karnataka 560049',
   gstin: '29DHYPN1328C1Z0',
   colors: {
@@ -66,13 +66,10 @@ export function emailBrandMarkHtml(logoUrl: string = GAMIFYTL_BRAND.logoWhite): 
   return `<table role="presentation" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border-spacing:0;margin:0;">
   <tr>
     <td valign="middle" style="padding:0;font-size:0;line-height:0;">
-      <picture>
-        <source srcset="${logoUrl}" type="image/webp" />
-        <img src="${logoUrl}" width="34" height="34" alt="GamifyTL" style="display:block;width:34px;height:34px;border:0;outline:none;text-decoration:none;" />
-      </picture>
+      <img src="${logoUrl}" width="34" height="34" alt="GamifyTL" style="display:block;width:34px;height:34px;border:0;outline:none;text-decoration:none;" />
     </td>
-    <td valign="middle" style="padding:0 0 0 4px;font-size:0;line-height:0;">
-      <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:34px;font-weight:900;letter-spacing:-0.6px;color:#ffffff;">amify</span><span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:34px;font-weight:900;letter-spacing:-0.6px;color:#ff3b30;">TL</span>
+    <td valign="middle" style="padding:0 0 0 8px;font-size:0;line-height:0;">
+      <span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:34px;font-weight:900;letter-spacing:-0.6px;color:#ffffff;">Gamify</span><span style="display:inline-block;font-family:Arial,Helvetica,sans-serif;font-size:22px;line-height:34px;font-weight:900;letter-spacing:-0.6px;color:#ff3b30;">TL</span>
     </td>
   </tr>
 </table>`;
