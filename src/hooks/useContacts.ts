@@ -226,21 +226,24 @@ export function useContacts() {
     try {
       const { data, error: insertError } = await supabase
         .from('contacts')
-        .insert({
-          user_id: userId,
-          first_name: firstName || null,
-          last_name: lastName || null,
-          full_name: fullName,
-          email: cleanEmail,
-          institution: contactData.institution?.trim() || null,
-          department: contactData.department?.trim() || null,
-          academic_role: contactData.academic_role?.trim() || null,
-          country: contactData.country?.trim() || null,
-          website: contactData.website?.trim() || null,
-          notes: contactData.notes?.trim() || null,
-          status: contactData.status || 'active',
-          contact_source: contactData.contact_source || 'manual',
-        })
+        .upsert(
+          {
+            user_id: userId,
+            first_name: firstName || null,
+            last_name: lastName || null,
+            full_name: fullName,
+            email: cleanEmail,
+            institution: contactData.institution?.trim() || null,
+            department: contactData.department?.trim() || null,
+            academic_role: contactData.academic_role?.trim() || null,
+            country: contactData.country?.trim() || null,
+            website: contactData.website?.trim() || null,
+            notes: contactData.notes?.trim() || null,
+            status: contactData.status || 'active',
+            contact_source: contactData.contact_source || 'manual',
+          },
+          { onConflict: 'user_id,email' }
+        )
         .select()
         .single();
 
@@ -248,7 +251,9 @@ export function useContacts() {
       await fetchContacts();
       return { success: true, contact: data };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error adding contact';
+      const msg =
+        (err as { message?: string })?.message ||
+        (err instanceof Error ? err.message : 'Error adding contact');
       return { success: false, error: msg };
     }
   };
@@ -404,12 +409,16 @@ export function useContacts() {
     }
 
     try {
-      const { error: insertError } = await supabase.from('contacts').insert(validRows);
+      const { error: insertError } = await supabase
+        .from('contacts')
+        .upsert(validRows, { onConflict: 'user_id,email' });
       if (insertError) throw insertError;
       await fetchContacts();
       return { success: true, insertedCount: validRows.length };
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Error importing contacts';
+      const msg =
+        (err as { message?: string })?.message ||
+        (err instanceof Error ? err.message : 'Error importing contacts');
       return { success: false, insertedCount: 0, error: msg };
     }
   };
