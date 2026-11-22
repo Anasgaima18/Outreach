@@ -52,8 +52,11 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
     <aside className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white select-none">
       {/* Brand Header */}
       <div className="flex h-16 items-center gap-3 border-b border-gray-200 px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-tr from-blue-700 to-indigo-600 text-white shadow-sm">
-          <GraduationCap className="h-5 w-5" />
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-950 p-1.5 shadow-sm">
+          <picture>
+            <source srcSet="/email-logo-on-dark.webp" type="image/webp" />
+            <img src="/email-logo-on-dark.webp" alt="GamifyTL Logo" className="h-6 w-6 object-contain" />
+          </picture>
         </div>
         <div>
           <span className="text-base font-bold text-gray-900 tracking-tight">GamifyTL</span>

@@ -33,9 +33,10 @@ export function Header({ activeViewTitle }: HeaderProps) {
         </Badge>
 
         <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-xs font-semibold text-white shadow-xs">
-            GT
-          </div>
+          <picture>
+            <source srcSet="/email-logo.webp" type="image/webp" />
+            <img src="/email-logo.webp" alt="GamifyTL" className="h-8 w-8 rounded-full object-contain p-0.5 border border-gray-200 bg-white shadow-xs" />
+          </picture>
         </div>
       </div>
     </header>
