@@ -204,9 +204,14 @@ export function CampaignsPage() {
                       <h4 className="text-base font-bold text-gray-900">{camp.name}</h4>
                       {getStatusBadge(camp.status)}
                     </div>
-                    <p className="text-xs text-gray-500 font-medium">
-                      Subject: <span className="text-gray-800">{camp.subject}</span>
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 pt-0.5">
+                      <p className="text-xs text-gray-500 font-medium">
+                        Base Subject: <span className="text-gray-800">{camp.subject}</span>
+                      </p>
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                        ⚡ 70+ Dynamic Personalized Variations Active
+                      </span>
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
