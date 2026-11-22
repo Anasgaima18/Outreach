@@ -17,6 +17,7 @@ export function AccountsPage() {
     refresh,
     disconnect,
     removeAccount,
+    updateDailyLimit,
     initiateOAuthConnect,
   } = useAccounts();
 
@@ -250,10 +251,28 @@ export function AccountsPage() {
 
                 {/* Daily Sending Limit Progress */}
                 <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3 space-y-2">
-                  <div className="flex justify-between text-xs font-semibold text-gray-700">
-                    <span>Daily Sending Limit</span>
+                  <div className="flex justify-between items-center text-xs font-semibold text-gray-700">
+                    <div className="flex items-center gap-1.5">
+                      <span>Daily Limit</span>
+                      <select
+                        value={acc.daily_limit}
+                        onChange={async (e) => {
+                          await updateDailyLimit(acc.id, Number(e.target.value));
+                        }}
+                        className="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 hover:border-blue-400 cursor-pointer shadow-2xs"
+                        title="Adjust daily send limit for this account"
+                      >
+                        <option value={20}>20/day</option>
+                        <option value={50}>50/day</option>
+                        <option value={100}>100/day</option>
+                        <option value={150}>150/day</option>
+                        <option value={200}>200/day</option>
+                        <option value={300}>300/day</option>
+                        <option value={500}>500/day (Max)</option>
+                      </select>
+                    </div>
                     <span>
-                      {acc.sent_today_count} / {acc.daily_limit} emails sent
+                      {acc.sent_today_count} / {acc.daily_limit} sent
                     </span>
                   </div>
                   <Progress
@@ -266,7 +285,7 @@ export function AccountsPage() {
                     }
                   />
                   <div className="flex justify-between text-[11px] text-gray-500">
-                    <span>Conservative policy (20–50/day)</span>
+                    <span>Google max: 500/day</span>
                     <span className="font-medium text-gray-800">{remaining} remaining today</span>
                   </div>
                 </div>

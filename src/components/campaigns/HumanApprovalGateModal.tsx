@@ -1,4 +1,4 @@
-import { ShieldCheck, AlertTriangle, Clock, Mail, Users, CheckCircle } from 'lucide-react';
+import { ShieldCheck, AlertTriangle, Clock, Mail, Users, CheckCircle, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '../ui/Dialog';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
@@ -13,6 +13,9 @@ export interface ApprovalModalPayload {
   followUpConfigured: boolean;
   followUpDays?: number;
   warnings: string[];
+  dynamicMatchingActive?: boolean;
+  matchedScenariosCount?: number;
+  uniqueSubjectsCount?: number;
 }
 
 interface HumanApprovalGateModalProps {
@@ -101,6 +104,22 @@ export function HumanApprovalGateModal({
             <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-2.5 text-xs text-emerald-800 flex items-center gap-2">
               <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
               <span>Deliverability verified: 20–60s randomized jitter, suppression pre-checks, pure RFC 2822 MIME.</span>
+            </div>
+          )}
+
+          {payload.dynamicMatchingActive && (
+            <div className="rounded-lg border border-purple-200 bg-purple-50/70 p-3 text-xs text-purple-900">
+              <div className="flex items-center justify-between font-semibold text-purple-950 mb-1">
+                <span className="flex items-center gap-1.5">
+                  <Sparkles className="h-4 w-4 text-purple-600" /> Dynamic Discipline Matching & Randomization Active
+                </span>
+                <span className="rounded-full bg-purple-200 px-2 py-0.5 text-[10px] font-bold text-purple-900">
+                  {payload.uniqueSubjectsCount || 1} Variations
+                </span>
+              </div>
+              <p className="text-purple-800 leading-relaxed text-[11px]">
+                Each professor receives a tailored template matching their department or role, randomized across {payload.matchedScenariosCount || 'multiple'} scenarios with alternating subject lines to eliminate spam clustering.
+              </p>
             </div>
           )}
 

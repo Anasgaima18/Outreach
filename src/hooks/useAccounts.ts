@@ -68,6 +68,45 @@ export function useAccounts() {
     }
   };
 
+  const updateDailyLimit = async (
+    accountId: string,
+    newLimit: number
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const sanitized = Math.max(1, Math.min(newLimit, 500));
+      const { error: updateErr } = await supabase
+        .from('connected_accounts')
+        .update({ daily_limit: sanitized, updated_at: new Date().toISOString() })
+        .eq('id', accountId);
+
+      if (updateErr) throw updateErr;
+      await fetchAccounts();
+      return { success: true };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error updating daily limit';
+      return { success: false, error: msg };
+    }
+  };
+
+  const updateAllDailyLimits = async (
+    newLimit: number
+  ): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const sanitized = Math.max(1, Math.min(newLimit, 500));
+      const { error: updateErr } = await supabase
+        .from('connected_accounts')
+        .update({ daily_limit: sanitized, updated_at: new Date().toISOString() })
+        .gte('daily_limit', 0); // Updates all matching rows
+
+      if (updateErr) throw updateErr;
+      await fetchAccounts();
+      return { success: true };
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error updating daily limits';
+      return { success: false, error: msg };
+    }
+  };
+
   const initiateOAuthConnect = (customParams?: {
     userId?: string;
     clientId?: string;
@@ -97,6 +136,8 @@ export function useAccounts() {
     refresh: fetchAccounts,
     disconnect,
     removeAccount,
+    updateDailyLimit,
+    updateAllDailyLimits,
     initiateOAuthConnect,
   };
 }

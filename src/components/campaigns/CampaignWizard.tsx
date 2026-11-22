@@ -42,6 +42,7 @@ import {
   type TemplateFormat,
 } from '../../lib/templates';
 import { GAMIFYTL_20_TEMPLATES } from '../../lib/verified-templates';
+import { matchAndRandomizeBatch, type BatchMatchSummary } from '../../lib/dynamic-template-matcher';
 import { HumanApprovalGateModal, type ApprovalModalPayload } from './HumanApprovalGateModal';
 import type { Contact, ConnectedAccount, Campaign } from '../../types/database.types';
 import type { CreateCampaignInput } from '../../hooks/useCampaigns';
@@ -162,6 +163,18 @@ export function CampaignWizard({
   const selectedContacts = useMemo(() => {
     return contacts.filter((c) => selectedContactIds.includes(c.id));
   }, [contacts, selectedContactIds]);
+
+  // Dynamic discipline matching & randomized templates
+  const [dynamicMatching, setDynamicMatching] = useState(true);
+  const [randomizationSeed, setRandomizationSeed] = useState(1);
+
+  const batchMatches = useMemo(() => {
+    const targetContacts = selectedContacts.length > 0 ? selectedContacts : (contacts.length > 0 ? contacts.slice(0, 10) : []);
+    return matchAndRandomizeBatch(targetContacts, {
+      format: templateFormat,
+      salt: randomizationSeed,
+    });
+  }, [selectedContacts, contacts, templateFormat, randomizationSeed]);
 
   // Sample contact for live preview
   const sampleContact = useMemo(() => {
@@ -337,6 +350,9 @@ export function CampaignWizard({
       followUpConfigured: followUpEnabled,
       followUpDays: followUpDelayDays,
       warnings,
+      dynamicMatchingActive: dynamicMatching,
+      matchedScenariosCount: batchMatches.scenarioBreakdown.length,
+      uniqueSubjectsCount: batchMatches.uniqueSubjectLinesCount,
     };
   }, [
     name,
@@ -350,6 +366,8 @@ export function CampaignWizard({
     followUpDelayDays,
     contentLint,
     personalizationCheck,
+    dynamicMatching,
+    batchMatches,
   ]);
 
   // Step transitions
@@ -381,6 +399,19 @@ export function CampaignWizard({
     setSubmitting(true);
     setFormError(null);
 
+    const recipientCustomizations: Record<string, any> = {};
+    if (dynamicMatching) {
+      for (const [cid, match] of Object.entries(batchMatches.assignments)) {
+        recipientCustomizations[cid] = {
+          subject: match.subject,
+          bodyText: match.bodyText,
+          bodyHtml: match.bodyHtml,
+          templateId: match.templateId,
+          templateName: match.templateName,
+        };
+      }
+    }
+
     const input: CreateCampaignInput = {
       name,
       description,
@@ -396,6 +427,7 @@ export function CampaignWizard({
       followUpBodyText: followUpEnabled ? followUpBodyText : undefined,
       scheduledAt: scheduledAt || undefined,
       recipientContactIds: selectedContactIds,
+      recipientCustomizations: dynamicMatching ? recipientCustomizations : undefined,
     };
 
     const result = await onSubmit(input, action);
@@ -414,6 +446,20 @@ export function CampaignWizard({
     }
 
     setSubmitting(true);
+
+    const recipientCustomizations: Record<string, any> = {};
+    if (dynamicMatching) {
+      for (const [cid, match] of Object.entries(batchMatches.assignments)) {
+        recipientCustomizations[cid] = {
+          subject: match.subject,
+          bodyText: match.bodyText,
+          bodyHtml: match.bodyHtml,
+          templateId: match.templateId,
+          templateName: match.templateName,
+        };
+      }
+    }
+
     const input: CreateCampaignInput = {
       name,
       description,
@@ -429,6 +475,7 @@ export function CampaignWizard({
       followUpBodyText: followUpEnabled ? followUpBodyText : undefined,
       scheduledAt: scheduledAt || undefined,
       recipientContactIds: selectedContactIds,
+      recipientCustomizations: dynamicMatching ? recipientCustomizations : undefined,
     };
 
     await onSubmit(input, 'draft');
@@ -755,8 +802,115 @@ export function CampaignWizard({
               </div>
             )}
 
-            {/* Template Selection Cards */}
-            <div className="grid gap-3 sm:grid-cols-2">
+            {/* Dynamic Matching & Template Randomization Card */}
+            <div className="rounded-2xl border-2 border-indigo-200 bg-gradient-to-br from-indigo-50/70 via-white to-blue-50/50 p-5 shadow-xs space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-xs">
+                      <Sparkles className="h-4 w-4" />
+                    </span>
+                    <h3 className="text-sm font-bold text-gray-900">
+                      Smart Dynamic Matching & Template Randomization
+                    </h3>
+                    <Badge variant="success" className="text-[10px]">Anti-Spam Boost</Badge>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed max-w-2xl">
+                    Inspects each professor's department, discipline, and role to assign matching templates from the 20 GamifyTL scenarios, and randomizes subject line alternatives to prevent repetitive spam pattern detection.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setDynamicMatching(!dynamicMatching)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      dynamicMatching ? 'bg-indigo-600' : 'bg-gray-200'
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition duration-200 ease-in-out ${
+                        dynamicMatching ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                  <span className="text-xs font-bold text-gray-700">
+                    {dynamicMatching ? 'Enabled' : 'Disabled'}
+                  </span>
+                </div>
+              </div>
+
+              {dynamicMatching && (
+                <div className="space-y-3 pt-3 border-t border-indigo-100/70">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="text-[11px] font-semibold text-gray-500 uppercase tracking-wider mr-1">
+                        Matched Scenarios:
+                      </span>
+                      {batchMatches.scenarioBreakdown.slice(0, 4).map((s) => (
+                        <span
+                          key={s.name}
+                          className="inline-flex items-center gap-1 rounded-full bg-indigo-100/80 px-2.5 py-0.5 text-[11px] font-semibold text-indigo-900"
+                        >
+                          {s.name} ({s.count})
+                        </span>
+                      ))}
+                      {batchMatches.scenarioBreakdown.length > 4 && (
+                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] text-gray-600">
+                          +{batchMatches.scenarioBreakdown.length - 4} more
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setRandomizationSeed((s) => s + 1);
+                        setTemplateActionNotice('Randomized template variations and subject lines across recipients.');
+                        setTimeout(() => setTemplateActionNotice(null), 3000);
+                      }}
+                      className="h-7 text-xs bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+                    >
+                      <RotateCcw className="mr-1.5 h-3 w-3" /> Re-randomize Variations
+                    </Button>
+                  </div>
+
+                  {/* Matching Table Preview */}
+                  <div className="max-h-52 overflow-y-auto rounded-xl border border-gray-200 bg-white text-xs shadow-2xs">
+                    <table className="w-full text-left">
+                      <thead className="bg-gray-50/80 border-b border-gray-200 text-[11px] text-gray-500 font-semibold uppercase sticky top-0 backdrop-blur-xs">
+                        <tr>
+                          <th className="py-2 px-3">Educator</th>
+                          <th className="py-2 px-3">Discipline / Role</th>
+                          <th className="py-2 px-3">Matched Scenario</th>
+                          <th className="py-2 px-3">Subject Variation</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100 text-[11px]">
+                        {Object.values(batchMatches.assignments).map((match) => (
+                          <tr key={match.contactId} className="hover:bg-gray-50/50">
+                            <td className="py-2 px-3 font-medium text-gray-900 whitespace-nowrap">{match.contactName}</td>
+                            <td className="py-2 px-3 text-gray-600 whitespace-nowrap">{match.department}</td>
+                            <td className="py-2 px-3">
+                              <span className="inline-block rounded bg-blue-50 px-2 py-0.5 font-medium text-blue-700 border border-blue-100 whitespace-nowrap">
+                                {match.templateName}
+                              </span>
+                            </td>
+                            <td className="py-2 px-3 text-gray-700 truncate max-w-xs" title={match.subject}>
+                              {match.subject}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Template Selection Cards (Fallback / Single Template Mode) */}
+            {!dynamicMatching && (
+              <div className="grid gap-3 sm:grid-cols-2">
               {/* Template 1 Card */}
               <div
                 onClick={() => handleApplyTemplate(TEMPLATE_1_PLAINTEXT)}
@@ -799,6 +953,7 @@ export function CampaignWizard({
                 </div>
               </div>
             </div>
+            )}
 
             {/* Template Management Actions Toolbar */}
             <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-gray-100 text-xs">

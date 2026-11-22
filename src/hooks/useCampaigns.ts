@@ -10,6 +10,14 @@ import type { Campaign, CampaignRecipient, CampaignStatus, FollowUpStatus } from
 import { interpolateVariables } from '../lib/templates';
 import { triggerSendingQueue } from '../services/queue';
 
+export interface RecipientTemplateCustomization {
+  subject: string;
+  bodyText: string;
+  bodyHtml?: string;
+  templateId?: string;
+  templateName?: string;
+}
+
 export interface CreateCampaignInput {
   name: string;
   description?: string;
@@ -26,6 +34,7 @@ export interface CreateCampaignInput {
   followUpBodyHtml?: string;
   scheduledAt?: string;
   recipientContactIds: string[];
+  recipientCustomizations?: Record<string, RecipientTemplateCustomization>;
 }
 
 export function useCampaigns() {
@@ -131,12 +140,16 @@ export function useCampaigns() {
           ? new Date(new Date(scheduledTime).getTime() + followUpDelayDays * 24 * 60 * 60 * 1000).toISOString()
           : null;
 
+        const custom = input.recipientCustomizations?.[contact.id];
+        const rawSubject = custom?.subject || input.subject;
+        const rawBodyText = custom?.bodyText || input.bodyText;
+
         return {
           campaign_id: campaign.id,
           contact_id: contact.id,
           status: 'queued' as const,
-          personalized_subject: interpolateVariables(input.subject, contact),
-          personalized_body: interpolateVariables(input.bodyText, contact),
+          personalized_subject: interpolateVariables(rawSubject, contact),
+          personalized_body: interpolateVariables(rawBodyText, contact),
           scheduled_for: scheduledTime,
           follow_up_status: (input.followUpEnabled ? 'scheduled' : 'none') as FollowUpStatus,
           follow_up_scheduled_at: followUpScheduledTime,
