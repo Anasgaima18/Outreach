@@ -97,9 +97,9 @@ export function ContactsPage() {
       {/* Header */}
       <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
-          <h2 className="text-xl font-bold tracking-tight text-gray-900">Professor & Educator Contacts</h2>
+          <h2 className="text-xl font-bold tracking-tight text-gray-900">Contacts Directory</h2>
           <p className="text-sm text-gray-500">
-            Targeted academic directory with institution, department, and role metadata.
+            Add any email — professor, corporate, or personal — to include in outreach campaigns.
           </p>
         </div>
         <div className="flex flex-wrap gap-2.5">
@@ -131,7 +131,7 @@ export function ContactsPage() {
             <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search by professor name, university, or email..."
+              placeholder="Search by name, company, or email..."
               value={filters.searchQuery}
               onChange={(e) => setFilters({ ...filters, searchQuery: e.target.value })}
               className="w-full rounded-lg border border-gray-300 bg-gray-50/50 pl-9 pr-4 py-2 text-sm focus:border-blue-500 focus:bg-white focus:outline-none"
@@ -204,14 +204,14 @@ export function ContactsPage() {
       {loading ? (
         <div className="flex h-48 items-center justify-center">
           <div className="h-6 w-6 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-          <span className="ml-3 text-sm text-gray-500">Loading educator directory...</span>
+          <span className="ml-3 text-sm text-gray-500">Loading contacts...</span>
         </div>
       ) : contacts.length === 0 ? (
         <EmptyState
           icon={<Users className="h-6 w-6" />}
-          title="No Professor Contacts Yet"
-          description="Import your educator contact list via CSV or add individual professors to start segmenting campaigns."
-          actionLabel="Import Educator CSV"
+          title="No Contacts Yet"
+          description="Add any email address — professor, corporate, or personal — or import a CSV to get started."
+          actionLabel="Import CSV"
           onAction={() => setCsvModalOpen(true)}
         />
       ) : filteredContacts.length === 0 ? (
@@ -231,7 +231,7 @@ export function ContactsPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Professor & Email</TableHead>
+                <TableHead>Contact & Email</TableHead>
                 <TableHead>Institution & Department</TableHead>
                 <TableHead>Academic Role</TableHead>
                 <TableHead>Country</TableHead>

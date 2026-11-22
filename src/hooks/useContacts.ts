@@ -208,12 +208,6 @@ export function useContacts() {
       return { success: false, error: 'Invalid email address format' };
     }
 
-    // 2. Duplicate detection against current contacts
-    const duplicate = contacts.find((c) => c.email.toLowerCase() === cleanEmail);
-    if (duplicate) {
-      return { success: false, error: `A contact with email ${cleanEmail} already exists (${duplicate.full_name})` };
-    }
-
     const firstName = contactData.first_name?.trim() || '';
     const lastName = contactData.last_name?.trim() || '';
     const fullName =
