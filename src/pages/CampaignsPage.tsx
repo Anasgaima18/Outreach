@@ -38,12 +38,15 @@ export function CampaignsPage() {
     cancelCampaign,
     deleteCampaign,
     getCampaignRecipients,
+    dispatchCampaignQueue,
   } = useCampaigns();
 
   const { accounts } = useAccounts();
   const { contacts } = useContacts();
 
   const [isCreating, setIsCreating] = useState(false);
+  const [dispatchingId, setDispatchingId] = useState<string | null>(null);
+  const [dispatchFeedback, setDispatchFeedback] = useState<string | null>(null);
 
   // Approval modal for awaiting_approval or draft campaigns in the list
   const [approvalModalOpen, setApprovalModalOpen] = useState(false);
@@ -143,6 +146,18 @@ export function CampaignsPage() {
         </div>
       )}
 
+      {dispatchFeedback && (
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-xs font-semibold text-emerald-800 flex items-center justify-between">
+          <span>{dispatchFeedback}</span>
+          <button
+            onClick={() => setDispatchFeedback(null)}
+            className="text-emerald-700 hover:text-emerald-900 font-bold ml-2"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Human Approval Gate Protocol Notice */}
       <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 text-blue-900 shadow-xs">
         <div className="flex items-start gap-3">
@@ -203,6 +218,35 @@ export function CampaignsPage() {
                         className="bg-emerald-600 hover:bg-emerald-700 text-white"
                       >
                         <UserCheck className="mr-1.5 h-3.5 w-3.5" /> Approve & Dispatch
+                      </Button>
+                    )}
+
+                    {camp.status === 'sending' && (
+                      <Button
+                        size="sm"
+                        onClick={async () => {
+                          setDispatchingId(camp.id);
+                          try {
+                            const res = await dispatchCampaignQueue(camp.id, 5);
+                            if (res.success > 0) {
+                              setDispatchFeedback(`Dispatched ${res.success} email(s) successfully!`);
+                            } else if (res.processed === 0) {
+                              setDispatchFeedback('All queued emails have already been dispatched.');
+                            } else if (res.failed > 0) {
+                              setDispatchFeedback(`Sending issue: ${res.errors.join('; ')}`);
+                            }
+                          } catch (e: unknown) {
+                            const msg = e instanceof Error ? e.message : String(e);
+                            setDispatchFeedback(`Dispatch failed: ${msg}`);
+                          } finally {
+                            setDispatchingId(null);
+                          }
+                        }}
+                        disabled={dispatchingId === camp.id}
+                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                      >
+                        <Send className="mr-1.5 h-3.5 w-3.5" />
+                        {dispatchingId === camp.id ? 'Sending...' : 'Dispatch Queue'}
                       </Button>
                     )}
 

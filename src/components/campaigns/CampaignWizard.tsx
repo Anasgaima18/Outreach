@@ -1028,40 +1028,93 @@ export function CampaignWizard({
 
           {/* Pacing & Follow-up Settings Card */}
           <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs space-y-6">
-            <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-              <Clock className="h-4 w-4 text-gray-600" /> Sending Pacing & Automated Follow-up
-            </h4>
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <div>
+                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <Clock className="h-4 w-4 text-blue-600" /> Sending Speed & Delivery Pacing
+                </h4>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  Protects your personal Gmail sender reputation by introducing human-like randomized delays between emails.
+                </p>
+              </div>
+            </div>
 
-            <div className="grid gap-4 sm:grid-cols-3">
-              <Input
-                label="Min Delay (Seconds)"
-                type="number"
-                min={15}
-                max={120}
-                value={minDelay}
-                onChange={(e) => setMinDelay(Number(e.target.value))}
-                helperText="Random jitter lower bound (default 20s)"
-              />
-              <Input
-                label="Max Delay (Seconds)"
-                type="number"
-                min={25}
-                max={300}
-                value={maxDelay}
-                onChange={(e) => setMaxDelay(Number(e.target.value))}
-                helperText="Random jitter upper bound (default 60s)"
-              />
-              <Input
-                label="Scheduled Start Date/Time"
-                type="datetime-local"
-                value={scheduledAt}
-                onChange={(e) => setScheduledAt(e.target.value)}
-                helperText="Leave empty to send immediately upon approval"
-              />
+            {/* Pacing presets */}
+            <div className="space-y-3">
+              <label className="block text-xs font-semibold text-gray-700">Sending Pacing Preset:</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMinDelay(20);
+                    setMaxDelay(60);
+                  }}
+                  className={`rounded-xl border p-3.5 text-left transition-all ${
+                    minDelay === 20 && maxDelay === 60
+                      ? 'border-blue-600 bg-blue-50/60 shadow-xs'
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-gray-900">🟢 Safe Human Pacing</span>
+                    {minDelay === 20 && maxDelay === 60 && (
+                      <span className="text-[10px] font-bold bg-blue-600 text-white px-1.5 py-0.5 rounded">Default</span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-gray-500">20s – 60s random delay per email. Recommended for all accounts.</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMinDelay(15);
+                    setMaxDelay(30);
+                  }}
+                  className={`rounded-xl border p-3.5 text-left transition-all ${
+                    minDelay === 15 && maxDelay === 30
+                      ? 'border-blue-600 bg-blue-50/60 shadow-xs'
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-gray-900">⚡ Moderate Speed</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">15s – 30s delay per email. Great for smaller contact batches.</p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMinDelay(60);
+                    setMaxDelay(120);
+                  }}
+                  className={`rounded-xl border p-3.5 text-left transition-all ${
+                    minDelay === 60 && maxDelay === 120
+                      ? 'border-blue-600 bg-blue-50/60 shadow-xs'
+                      : 'border-gray-200 bg-white hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-xs font-bold text-gray-900">🛡️ Extra Conservative</span>
+                  </div>
+                  <p className="text-[11px] text-gray-500">60s – 120s delay. Ideal for freshly connected Gmail accounts.</p>
+                </button>
+              </div>
+
+              {/* Start Schedule input */}
+              <div className="pt-2">
+                <Input
+                  label="Schedule Campaign Start (Optional)"
+                  type="datetime-local"
+                  value={scheduledAt}
+                  onChange={(e) => setScheduledAt(e.target.value)}
+                  helperText="Leave blank to send immediately upon approval."
+                />
+              </div>
             </div>
 
             {/* Follow-up sequence controls */}
-            <div className="rounded-xl border border-gray-200 bg-gray-50/30 p-4 space-y-4">
+            <div className="rounded-xl border border-gray-200 bg-gray-50/40 p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <input
@@ -1069,7 +1122,7 @@ export function CampaignWizard({
                     id="enableFollowUp"
                     checked={followUpEnabled}
                     onChange={(e) => setFollowUpEnabled(e.target.checked)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
                   />
                   <label htmlFor="enableFollowUp" className="text-xs font-bold text-gray-900 cursor-pointer">
                     Enable Automated Threaded Follow-up Sequence
@@ -1077,34 +1130,61 @@ export function CampaignWizard({
                 </div>
                 {followUpEnabled && (
                   <Badge variant="success" className="text-[10px]">
-                    Reply & Bounce Suppression Active
+                    Auto-Stops When Reply Received
                   </Badge>
                 )}
               </div>
 
               {followUpEnabled && (
-                <div className="space-y-3 pt-2">
-                  <div className="w-48">
-                    <Input
-                      label="Follow-up Delay (Days)"
-                      type="number"
-                      min={1}
-                      max={30}
-                      value={followUpDelayDays}
-                      onChange={(e) => setFollowUpDelayDays(Number(e.target.value))}
-                    />
+                <div className="space-y-4 pt-2 border-t border-gray-200/60">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="sm:col-span-1">
+                      <Input
+                        label="Wait Delay (Days)"
+                        type="number"
+                        min={1}
+                        max={30}
+                        value={followUpDelayDays}
+                        onChange={(e) => setFollowUpDelayDays(Number(e.target.value))}
+                        helperText="Days after initial send before follow-up"
+                      />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <Input
+                        label="Follow-up Subject Line"
+                        value={followUpSubject}
+                        onChange={(e) => setFollowUpSubject(e.target.value)}
+                        placeholder="Re: Quick follow up on GamifyTL"
+                      />
+                    </div>
                   </div>
-                  <Input
-                    label="Follow-up Subject"
-                    value={followUpSubject}
-                    onChange={(e) => setFollowUpSubject(e.target.value)}
-                  />
+
+                  {/* Personalization variable chips for follow-up */}
+                  <div className="space-y-1.5">
+                    <label className="block text-[11px] font-semibold text-gray-600">
+                      Insert Personalization Tags:
+                    </label>
+                    <div className="flex flex-wrap gap-1.5">
+                      {['{{first_name}}', '{{last_name}}', '{{institution}}'].map((tag) => (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => setFollowUpBodyText((prev) => `${prev} ${tag}`)}
+                          className="rounded-md border border-gray-200 bg-white px-2 py-0.5 font-mono text-[11px] text-gray-700 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 transition-colors shadow-2xs"
+                        >
+                          + {tag}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <Textarea
-                    label="Follow-up Message"
-                    rows={4}
+                    label="Follow-up Message Body"
+                    rows={6}
                     value={followUpBodyText}
                     onChange={(e) => setFollowUpBodyText(e.target.value)}
-                    className="font-mono text-xs"
+                    className="text-sm leading-relaxed"
+                    placeholder="Enter your follow-up message..."
                   />
                 </div>
               )}

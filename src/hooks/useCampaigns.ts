@@ -188,9 +188,9 @@ export function useCampaigns() {
       // If send_now, trigger first batch send in background
       if (action === 'send_now') {
         try {
-          await triggerSendingQueue({ campaignId, batchSize: 3 });
+          await triggerSendingQueue({ campaignId, batchSize: 5 });
         } catch (queueErr) {
-          console.warn('Initial micro-batch send trigger deferred to cron:', queueErr);
+          console.warn('Initial micro-batch send trigger note:', queueErr);
         }
       }
 
@@ -232,6 +232,13 @@ export function useCampaigns() {
         .eq('id', campaignId);
 
       if (err) throw err;
+
+      try {
+        await triggerSendingQueue({ campaignId, batchSize: 5 });
+      } catch (queueErr) {
+        console.warn('Resume micro-batch send trigger note:', queueErr);
+      }
+
       await fetchCampaigns();
       return { success: true };
     } catch (err: unknown) {
@@ -314,5 +321,10 @@ export function useCampaigns() {
     cancelCampaign,
     deleteCampaign,
     getCampaignRecipients,
+    dispatchCampaignQueue: async (campaignId?: string, batchSize = 5) => {
+      const res = await triggerSendingQueue({ campaignId, batchSize });
+      await fetchCampaigns();
+      return res;
+    },
   };
 }

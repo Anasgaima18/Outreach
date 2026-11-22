@@ -133,18 +133,18 @@ set search_path = public, extensions
 as $$
 begin
   -- 1. Daily Quota Rollover: Reset sent_today_count for accounts where last_sent_at is from a previous calendar day (UTC)
-  update public.connected_accounts
+  update public.connected_accounts ca
   set sent_today_count = 0,
-      status = case when status = 'rate_limited' then 'active' else status end,
+      status = case when ca.status = 'rate_limited' then 'active' else ca.status end,
       updated_at = now()
-  where last_sent_at is not null
-    and (last_sent_at at time zone 'UTC')::date < (now() at time zone 'UTC')::date
-    and (status = 'active' or status = 'rate_limited');
+  where ca.last_sent_at is not null
+    and (ca.last_sent_at at time zone 'UTC')::date < (now() at time zone 'UTC')::date
+    and (ca.status = 'active' or ca.status = 'rate_limited');
 
   -- 2. Claim queued recipients respecting schedule, backoff retry time, active account status, and quota
   return query
   with claimed as (
-    select r.id
+    select r.id as rid
     from public.campaign_recipients r
     join public.campaigns c on c.id = r.campaign_id
     join public.connected_accounts acc on acc.id = c.account_id
@@ -164,15 +164,15 @@ begin
     set status = 'sending',
         updated_at = now()
     from claimed
-    where r.id = claimed.id
-    returning r.id, r.campaign_id, r.contact_id, r.status, r.retry_count
+    where r.id = claimed.rid
+    returning r.id as uid, r.campaign_id as ucampaign_id, r.contact_id as ucontact_id, r.status as ustatus, r.retry_count as uretry_count
   )
   select 
-    u.id as recipient_id,
-    u.campaign_id,
-    u.contact_id,
-    u.status,
-    u.retry_count,
+    u.uid as recipient_id,
+    u.ucampaign_id as campaign_id,
+    u.ucontact_id as contact_id,
+    u.ustatus as status,
+    u.uretry_count as retry_count,
     c.name as campaign_name,
     c.subject as campaign_subject,
     c.body_text as campaign_body_text,
@@ -192,8 +192,8 @@ begin
     acc.status as account_status,
     acc.last_sent_at
   from updated u
-  join public.campaigns c on c.id = u.campaign_id
-  join public.contacts ct on ct.id = u.contact_id
+  join public.campaigns c on c.id = u.ucampaign_id
+  join public.contacts ct on ct.id = u.ucontact_id
   join public.connected_accounts acc on acc.id = c.account_id;
 end;
 $$;
