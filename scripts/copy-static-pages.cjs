@@ -30,4 +30,16 @@ fs.copyFileSync(path.join(siteDir, 'terms.html'), path.join(distDir, 'terms', 'i
 fs.copyFileSync(path.join(siteDir, 'index.html'), path.join(distDir, 'landing.html'));
 fs.copyFileSync(path.join(siteDir, 'index.html'), path.join(distDir, 'home', 'index.html'));
 
-console.log('Successfully copied all static legal and landing pages to dist/');
+// App routes to mirror for SPA routing without 404
+const appRoutes = ['accounts', 'contacts', 'campaigns', 'follow-ups', 'replies', 'analytics', 'settings'];
+const mainAppHtml = path.join(distDir, 'index.html');
+
+appRoutes.forEach((route) => {
+  const targetDir = path.join(distDir, route);
+  if (!fs.existsSync(targetDir)) {
+    fs.mkdirSync(targetDir, { recursive: true });
+  }
+  fs.copyFileSync(mainAppHtml, path.join(targetDir, 'index.html'));
+});
+
+console.log('Successfully copied all static legal, landing, and SPA route pages to dist/');

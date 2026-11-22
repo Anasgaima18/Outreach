@@ -26,19 +26,23 @@ serve(async (req: Request) => {
   const redirectUri = getEnv('GOOGLE_REDIRECT_URI') || `${url.origin}/functions/v1/oauth-callback`;
   const encryptionKey = getEnv('OAUTH_ENCRYPTION_KEY');
 
+  const redirectWithError = (msg: string) => {
+    return Response.redirect(`${appUrl}/?view=accounts&status=error&message=${encodeURIComponent(msg)}`, 303);
+  };
+
   if (!encryptionKey) {
     console.error('OAUTH_ENCRYPTION_KEY is not configured in Supabase Secrets');
-    return Response.redirect(`${appUrl}/accounts?status=error&message=Server+configuration+error:+encryption+key+missing`, 303);
+    return redirectWithError('Server configuration error: encryption key missing');
   }
 
   // If user denied access in Google consent screen
   if (errorParam) {
     console.error('Google OAuth error callback:', errorParam);
-    return Response.redirect(`${appUrl}/accounts?status=error&message=${encodeURIComponent(errorParam)}`, 303);
+    return redirectWithError(errorParam);
   }
 
   if (!code || !state) {
-    return Response.redirect(`${appUrl}/accounts?status=error&message=Missing+authorization+code+or+state`, 303);
+    return redirectWithError('Missing authorization code or state');
   }
 
   // 1. Validate CSRF state token and 15-minute expiration window
@@ -57,8 +61,11 @@ serve(async (req: Request) => {
     }
   } catch (err) {
     console.error('Invalid or expired state token:', err);
-    return Response.redirect(`${appUrl}/accounts?status=error&message=Invalid+or+expired+state+token`, 303);
+    return redirectWithError('Invalid or expired state token');
   }
+
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+  const safeUserId = isUuid ? userId : '00000000-0000-0000-0000-000000000000';
 
   try {
     // 2. Exchange authorization code for tokens
@@ -111,7 +118,7 @@ serve(async (req: Request) => {
     // 4. Encrypt refresh token & upsert into connected_accounts via RPC
     const supabase = createServiceClient();
     const { data: accountId, error: dbError } = await supabase.rpc('store_connected_account', {
-      p_user_id: userId,
+      p_user_id: safeUserId,
       p_email: accountEmail,
       p_display_name: displayName,
       p_refresh_token: refresh_token,
@@ -128,12 +135,12 @@ serve(async (req: Request) => {
 
     // 5. Redirect back to frontend accounts page with success
     return Response.redirect(
-      `${appUrl}/accounts?status=success&email=${encodeURIComponent(accountEmail)}&account_id=${accountId}`,
+      `${appUrl}/?view=accounts&status=success&email=${encodeURIComponent(accountEmail)}&account_id=${accountId}`,
       303
     );
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : String(err);
     console.error('OAuth callback execution error:', errorMsg);
-    return Response.redirect(`${appUrl}/accounts?status=error&message=${encodeURIComponent(errorMsg)}`, 303);
+    return redirectWithError(errorMsg);
   }
 });

@@ -34,6 +34,31 @@ export function AccountsPage() {
       'https://kiowzydhojinqonuvaxq.supabase.co/functions/v1/oauth-callback'
   );
 
+  // Check URL query parameters for OAuth redirect status
+  const [urlNotification, setUrlNotification] = useState<{
+    type: 'success' | 'error';
+    message: string;
+  } | null>(() => {
+    if (typeof window === 'undefined') return null;
+    const params = new URLSearchParams(window.location.search);
+    const status = params.get('status');
+    const msg = params.get('message');
+    const email = params.get('email');
+    if (status === 'success') {
+      return {
+        type: 'success',
+        message: `Successfully connected ${email || 'your Gmail account'}! You can now send campaigns.`,
+      };
+    }
+    if (status === 'error') {
+      return {
+        type: 'error',
+        message: msg || 'An error occurred during Google OAuth connection.',
+      };
+    }
+    return null;
+  });
+
   const handleOpenConnect = () => {
     setConnectModalOpen(true);
   };
@@ -42,7 +67,7 @@ export function AccountsPage() {
     const authUrl = initiateOAuthConnect({
       clientId,
       redirectUri,
-      userId: 'current-user',
+      userId: '00000000-0000-0000-0000-000000000000',
     });
     // In production browser environment, redirect to Google OAuth
     if (typeof window !== 'undefined') {
@@ -68,7 +93,7 @@ export function AccountsPage() {
     const authUrl = initiateOAuthConnect({
       clientId,
       redirectUri,
-      userId: acc.user_id,
+      userId: acc.user_id || '00000000-0000-0000-0000-000000000000',
     });
     if (typeof window !== 'undefined') {
       window.location.href = authUrl;
@@ -111,6 +136,25 @@ export function AccountsPage() {
           </Button>
         </div>
       </div>
+
+      {urlNotification && (
+        <div
+          className={`rounded-xl border p-4 text-xs font-semibold flex items-center justify-between ${
+            urlNotification.type === 'success'
+              ? 'border-emerald-200 bg-emerald-50 text-emerald-800'
+              : 'border-red-200 bg-red-50 text-red-800'
+          }`}
+        >
+          <span>{urlNotification.message}</span>
+          <button
+            type="button"
+            onClick={() => setUrlNotification(null)}
+            className="ml-4 font-bold text-gray-500 hover:text-gray-700"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-800">

@@ -11,7 +11,23 @@ import { AnalyticsPage } from './pages/AnalyticsPage';
 import { SettingsPage } from './pages/SettingsPage';
 
 export function App() {
-  const [currentView, setCurrentView] = useState<ViewType>('dashboard');
+  const getInitialView = (): ViewType => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const viewParam = params.get('view') as ViewType;
+      if (viewParam && ['dashboard', 'accounts', 'contacts', 'campaigns', 'follow-ups', 'replies', 'analytics', 'settings'].includes(viewParam)) {
+        return viewParam;
+      }
+
+      const path = window.location.pathname.replace(/^\/+|\/+$/g, '');
+      if (['dashboard', 'accounts', 'contacts', 'campaigns', 'follow-ups', 'replies', 'analytics', 'settings'].includes(path)) {
+        return path as ViewType;
+      }
+    }
+    return 'dashboard';
+  };
+
+  const [currentView, setCurrentView] = useState<ViewType>(getInitialView);
 
   const renderView = () => {
     switch (currentView) {
