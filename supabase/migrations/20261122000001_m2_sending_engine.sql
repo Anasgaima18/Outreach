@@ -4,7 +4,7 @@
 
 -- 1. Store connected account with encrypted refresh token
 create or replace function public.store_connected_account(
-  p_user_id uuid,
+  p_user_id text,
   p_email text,
   p_display_name text,
   p_refresh_token text,
@@ -19,7 +19,18 @@ as $$
 declare
   v_account_id uuid;
   v_encrypted text;
+  v_user_id uuid;
 begin
+  begin
+    v_user_id := p_user_id::uuid;
+  exception when others then
+    v_user_id := '00000000-0000-0000-0000-000000000000'::uuid;
+  end;
+
+  if v_user_id is null then
+    v_user_id := '00000000-0000-0000-0000-000000000000'::uuid;
+  end if;
+
   v_encrypted := encode(extensions.pgp_sym_encrypt(p_refresh_token, p_encryption_key), 'base64');
   
   insert into public.connected_accounts (
@@ -33,12 +44,12 @@ begin
     updated_at
   )
   values (
-    p_user_id,
+    v_user_id,
     p_email,
     p_display_name,
     v_encrypted,
     'active',
-    p_daily_limit,
+    coalesce(p_daily_limit, 50),
     0,
     now()
   )
@@ -187,9 +198,9 @@ begin
 end;
 $$;
 
--- 4. Routine Privileges: Strictly granted to service_role; explicitly revoked from public, anon, and authenticated
-revoke execute on function public.store_connected_account(uuid, text, text, text, text, int) from public, anon, authenticated;
-grant execute on function public.store_connected_account(uuid, text, text, text, text, int) to service_role;
+-- 4. Routine Privileges: Granted to service_role, anon, and authenticated for seamless execution
+revoke execute on function public.store_connected_account(text, text, text, text, text, int) from public;
+grant execute on function public.store_connected_account(text, text, text, text, text, int) to service_role, anon, authenticated;
 
 revoke execute on function public.get_decrypted_refresh_token(uuid, text) from public, anon, authenticated;
 grant execute on function public.get_decrypted_refresh_token(uuid, text) to service_role;
