@@ -1,0 +1,13 @@
+project_id = "kiowzydhojinqonuvaxq"
+
+[functions.oauth-callback]
+verify_jwt = false
+
+[functions.process-sending-queue]
+verify_jwt = false
+
+[functions.sync-replies]
+verify_jwt = false
+
+[functions.refresh-token]
+verify_jwt = false
