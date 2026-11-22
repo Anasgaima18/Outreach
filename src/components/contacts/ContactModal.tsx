@@ -61,7 +61,7 @@ export function ContactModal({ open, onOpenChange, contact, onSave }: ContactMod
   const handleEmailChange = (val: string) => {
     setEmail(val);
     if (val.trim() && !validateEmailFormat(val.trim())) {
-      setEmailError('Please enter a valid academic email address');
+      setEmailError('Please enter a valid email address');
     } else {
       setEmailError(null);
     }
@@ -77,7 +77,7 @@ export function ContactModal({ open, onOpenChange, contact, onSave }: ContactMod
     }
 
     if (!validateEmailFormat(cleanEmail)) {
-      setEmailError('Please enter a valid academic email address');
+      setEmailError('Please enter a valid email address');
       return;
     }
 
@@ -112,11 +112,11 @@ export function ContactModal({ open, onOpenChange, contact, onSave }: ContactMod
       <DialogContent maxWidth="lg" onClose={() => onOpenChange(false)}>
         <form onSubmit={handleSubmit} className="space-y-4">
           <DialogHeader>
-            <DialogTitle>{contact ? 'Edit Educator Contact' : 'Add Educator Contact'}</DialogTitle>
+            <DialogTitle>{contact ? 'Edit Contact' : 'Add Contact'}</DialogTitle>
             <DialogDescription>
               {contact
-                ? 'Update academic profile, institution details, or outreach status.'
-                : 'Enter professor details to include them in personalized GamifyTL outreach campaigns.'}
+                ? 'Update contact details or outreach status.'
+                : 'Enter contact details or any email address (personal, corporate, or academic) to include in campaigns.'}
             </DialogDescription>
           </DialogHeader>
 
@@ -145,7 +145,7 @@ export function ContactModal({ open, onOpenChange, contact, onSave }: ContactMod
             label="Email Address"
             type="email"
             required
-            placeholder="e.g. david.malan@harvard.edu"
+            placeholder="e.g. name@university.edu or contact@gmail.com"
             value={email}
             onChange={(e) => handleEmailChange(e.target.value)}
             error={emailError || undefined}
