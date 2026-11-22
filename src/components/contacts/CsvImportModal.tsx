@@ -67,8 +67,17 @@ export function CsvImportModal({
 
     // Initial automapping
     const initialMapping: Record<string, string> = {};
+    let emailAssigned = false;
     parsed.headers.forEach((h) => {
-      initialMapping[h] = autoMapHeader(h);
+      let mapped = autoMapHeader(h);
+      if (mapped === 'email') {
+        if (emailAssigned) {
+          mapped = '';
+        } else {
+          emailAssigned = true;
+        }
+      }
+      initialMapping[h] = mapped;
     });
     setMapping(initialMapping);
     setStep('mapping');
@@ -214,9 +223,17 @@ export function CsvImportModal({
                   <div className="w-full sm:w-60">
                     <Select
                       value={mapping[header] || ''}
-                      onChange={(e) =>
-                        setMapping({ ...mapping, [header]: e.target.value })
-                      }
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        const newMapping = { ...mapping };
+                        if (val === 'email') {
+                          Object.keys(newMapping).forEach((h) => {
+                            if (newMapping[h] === 'email') newMapping[h] = '';
+                          });
+                        }
+                        newMapping[header] = val;
+                        setMapping(newMapping);
+                      }}
                       className="text-xs h-8"
                     >
                       {targetFields.map((f) => (

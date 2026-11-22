@@ -371,7 +371,17 @@ export function useContacts() {
         }
       });
 
-      const email = mappedRow.email?.toLowerCase();
+      let email = mappedRow.email?.toLowerCase();
+
+      // Auto-recovery: if the mapped email column is invalid (e.g., user mapped 'Email Source URL' instead of 'Institutional Email'),
+      // inspect row columns for any field with a valid RFC 5322 email address
+      if (!email || !validateEmailFormat(email)) {
+        const emailCol = Object.keys(row).find((k) => validateEmailFormat((row[k] || '').trim()));
+        if (emailCol) {
+          email = (row[emailCol] || '').trim().toLowerCase();
+          mappedRow.email = email;
+        }
+      }
 
       // Check required email
       if (!email) {
