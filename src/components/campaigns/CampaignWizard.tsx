@@ -1148,12 +1148,16 @@ export function CampaignWizard({
             </p>
 
             <Input
+              id="test-recipient-email"
+              name="email"
+              autoComplete="email"
               label="Recipient Test Email"
               type="email"
               required
               placeholder="your.email@example.com"
               value={testRecipientEmail}
               onChange={(e) => setTestRecipientEmail(e.target.value)}
+              onInput={(e) => setTestRecipientEmail((e.target as HTMLInputElement).value)}
             />
 
             <div className="rounded-lg bg-gray-50 p-3 text-xs space-y-1 text-gray-600 border border-gray-200">

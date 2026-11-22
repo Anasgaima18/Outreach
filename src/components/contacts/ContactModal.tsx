@@ -128,56 +128,82 @@ export function ContactModal({ open, onOpenChange, contact, onSave }: ContactMod
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
+              id="contact-first-name"
+              name="given-name"
+              autoComplete="given-name"
               label="First Name"
               placeholder="e.g. David"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
+              onInput={(e) => setFirstName((e.target as HTMLInputElement).value)}
             />
             <Input
+              id="contact-last-name"
+              name="family-name"
+              autoComplete="family-name"
               label="Last Name"
               placeholder="e.g. Malan"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              onInput={(e) => setLastName((e.target as HTMLInputElement).value)}
             />
           </div>
 
           <Input
+            id="contact-email"
+            name="email"
+            autoComplete="email"
             label="Email Address"
             type="email"
             required
             placeholder="e.g. name@university.edu or contact@gmail.com"
             value={email}
             onChange={(e) => handleEmailChange(e.target.value)}
+            onInput={(e) => handleEmailChange((e.target as HTMLInputElement).value)}
             error={emailError || undefined}
           />
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
+              id="contact-institution"
+              name="organization"
+              autoComplete="organization"
               label="University / Institution"
               placeholder="e.g. Harvard University"
               value={institution}
               onChange={(e) => setInstitution(e.target.value)}
+              onInput={(e) => setInstitution((e.target as HTMLInputElement).value)}
             />
             <Input
+              id="contact-department"
+              name="department"
               label="Department"
               placeholder="e.g. Computer Science"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
+              onInput={(e) => setDepartment((e.target as HTMLInputElement).value)}
             />
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <Input
+              id="contact-role"
+              name="job-title"
               label="Academic Role / Title"
               placeholder="e.g. Professor of the Practice"
               value={academicRole}
               onChange={(e) => setAcademicRole(e.target.value)}
+              onInput={(e) => setAcademicRole((e.target as HTMLInputElement).value)}
             />
             <Input
+              id="contact-country"
+              name="country-name"
+              autoComplete="country-name"
               label="Country"
               placeholder="e.g. United States"
               value={country}
               onChange={(e) => setCountry(e.target.value)}
+              onInput={(e) => setCountry((e.target as HTMLInputElement).value)}
             />
           </div>
 
