@@ -35,41 +35,105 @@ function interpolateVariables(
   const hasInstitution = Boolean(vars.institution && vars.institution.trim());
   const hasDepartment = Boolean(vars.department && vars.department.trim());
 
-  // 1. Salutation handling - never produce "Dear Professor ," or "Dear Professor Colleague," or "Dear Professor/dean,"
-  if (hasLastName) {
-    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Dear Professor ${vars.last_name!.trim()},`);
-  } else if (hasFirstName) {
-    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Hi ${vars.first_name!.trim()},`);
-  } else if (hasFullName) {
-    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Hi ${vars.full_name!.trim()},`);
+  let derivedFirstName = vars.first_name?.trim() || '';
+  let derivedLastName = vars.last_name?.trim() || '';
+  if (!derivedLastName && hasFullName) {
+    const parts = vars.full_name!.trim().split(/\s+/);
+    if (parts.length > 1) {
+      derivedLastName = parts[parts.length - 1];
+      if (!derivedFirstName) derivedFirstName = parts.slice(0, -1).join(' ');
+    } else {
+      derivedFirstName = parts[0];
+    }
+  }
+
+  // 1. Salutation handling
+  if (derivedLastName) {
+    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Dear Professor ${derivedLastName},`);
+    resolved = resolved.replace(/Dear Professor\/dean,?/gi, `Dear Professor ${derivedLastName},`);
+  } else if (derivedFirstName) {
+    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, `Hi ${derivedFirstName},`);
+    resolved = resolved.replace(/Dear Professor\/dean,?/gi, `Hi ${derivedFirstName},`);
   } else {
-    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, 'Hello,');
-    resolved = resolved.replace(/Dear Professor\/dean,?/gi, 'Hello,');
+    resolved = resolved.replace(/Dear Professor\s*\{\{\s*last_name\s*\}\},?/gi, 'Dear Professor,');
+    resolved = resolved.replace(/Dear Professor\/colleague,?/gi, 'Dear Professor,');
+    resolved = resolved.replace(/Dear Professor\/dean,?/gi, 'Dear Professor,');
   }
 
   // 2. Department & institution combination phrases - prevent "in the your department at your institution"
   if (!hasDepartment && !hasInstitution) {
     resolved = resolved
-      .replace(/in the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, 'in higher education')
-      .replace(/for\s*\{\{\s*institution\s*\}\}\s*(?:lectures|classes|students)?/gi, 'for university lectures')
-      .replace(/at\s*\{\{\s*institution\s*\}\}/gi, 'at your university');
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, 'for university lectures')
+      .replace(/in\s*the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, 'in higher education')
+      .replace(/in\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, 'in higher education')
+      .replace(/your\s*\{\{\s*department\s*\}\}\s*lectures/gi, 'your lectures')
+      .replace(/regarding\s*your\s*\{\{\s*department\s*\}\}\s*courses/gi, 'regarding your courses')
+      .replace(/regarding\s*your\s*\{\{\s*department\s*\}\}\s*lectures/gi, 'regarding your lectures')
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*courses/gi, 'for your courses')
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*students/gi, 'for your students')
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*faculty/gi, 'for university faculty')
+      .replace(/in\s*\{\{\s*department\s*\}\}\s*lectures/gi, 'in your lectures')
+      .replace(/in\s*\{\{\s*department\s*\}\}\s*courses/gi, 'in your courses')
+      .replace(/for\s*\{\{\s*department\s*\}\}/gi, 'for your courses')
+      .replace(/in\s*the\s*\{\{\s*department\s*\}\}/gi, 'in higher education')
+      .replace(/for\s*your\s*\{\{\s*institution\s*\}\}\s*courses/gi, 'for your courses')
+      .replace(/for\s*your\s*\{\{\s*institution\s*\}\}\s*students/gi, 'for your students')
+      .replace(/in\s*\{\{\s*institution\s*\}\}\s*lectures/gi, 'in your lectures')
+      .replace(/in\s*\{\{\s*institution\s*\}\}\s*classrooms/gi, 'in your classrooms')
+      .replace(/for\s*\{\{\s*institution\s*\}\}\s*(?:lectures|classes|courses|faculty)?/gi, 'for university courses')
+      .replace(/at\s*\{\{\s*institution\s*\}\}/gi, 'in your lectures');
   } else if (!hasDepartment && hasInstitution) {
+    const inst = vars.institution!.trim();
     resolved = resolved
-      .replace(/in the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `at ${vars.institution!.trim()}`)
-      .replace(/for\s*\{\{\s*institution\s*\}\}/gi, `for ${vars.institution!.trim()}`);
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `at ${inst}`)
+      .replace(/in\s*the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `at ${inst}`)
+      .replace(/in\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `at ${inst}`)
+      .replace(/your\s*\{\{\s*department\s*\}\}\s*lectures/gi, `your lectures at ${inst}`)
+      .replace(/regarding\s*your\s*\{\{\s*department\s*\}\}\s*courses/gi, `regarding your courses at ${inst}`)
+      .replace(/regarding\s*your\s*\{\{\s*department\s*\}\}\s*lectures/gi, `regarding your lectures at ${inst}`)
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*courses/gi, `for courses at ${inst}`)
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*students/gi, `for students at ${inst}`)
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*faculty/gi, `for faculty at ${inst}`)
+      .replace(/in\s*\{\{\s*department\s*\}\}\s*lectures/gi, `in your lectures at ${inst}`)
+      .replace(/in\s*\{\{\s*department\s*\}\}\s*courses/gi, `in courses at ${inst}`)
+      .replace(/for\s*\{\{\s*department\s*\}\}/gi, `for ${inst} courses`)
+      .replace(/in\s*the\s*\{\{\s*department\s*\}\}/gi, `at ${inst}`)
+      .replace(/for\s*your\s*\{\{\s*institution\s*\}\}\s*courses/gi, `for your ${inst} courses`)
+      .replace(/for\s*your\s*\{\{\s*institution\s*\}\}\s*students/gi, `for your ${inst} students`)
+      .replace(/in\s*\{\{\s*institution\s*\}\}\s*lectures/gi, `in ${inst} lectures`)
+      .replace(/in\s*\{\{\s*institution\s*\}\}\s*classrooms/gi, `in ${inst} classrooms`)
+      .replace(/for\s*\{\{\s*institution\s*\}\}/gi, `for ${inst}`)
+      .replace(/at\s*\{\{\s*institution\s*\}\}/gi, `at ${inst}`);
   } else if (hasDepartment && !hasInstitution) {
+    const dept = vars.department!.trim();
     resolved = resolved
-      .replace(/in the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `in ${vars.department!.trim()}`)
-      .replace(/for\s*\{\{\s*institution\s*\}\}/gi, 'for your courses');
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `for ${dept}`)
+      .replace(/in\s*the\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `in the ${dept}`)
+      .replace(/in\s*\{\{\s*department\s*\}\}\s*at\s*\{\{\s*institution\s*\}\}/gi, `in ${dept}`)
+      .replace(/your\s*\{\{\s*department\s*\}\}\s*lectures/gi, `your ${dept} lectures`)
+      .replace(/regarding\s*your\s*\{\{\s*department\s*\}\}\s*courses/gi, `regarding your ${dept} courses`)
+      .replace(/regarding\s*your\s*\{\{\s*department\s*\}\}\s*lectures/gi, `regarding your ${dept} lectures`)
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*courses/gi, `for ${dept} courses`)
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*students/gi, `for ${dept} students`)
+      .replace(/for\s*\{\{\s*department\s*\}\}\s*faculty/gi, `for ${dept} faculty`)
+      .replace(/in\s*\{\{\s*department\s*\}\}\s*lectures/gi, `in ${dept} lectures`)
+      .replace(/in\s*\{\{\s*department\s*\}\}\s*courses/gi, `in ${dept} courses`)
+      .replace(/for\s*\{\{\s*department\s*\}\}/gi, `for ${dept}`)
+      .replace(/in\s*the\s*\{\{\s*department\s*\}\}/gi, `in the ${dept}`)
+      .replace(/for\s*your\s*\{\{\s*institution\s*\}\}\s*courses/gi, `for your ${dept} courses`)
+      .replace(/for\s*your\s*\{\{\s*institution\s*\}\}\s*students/gi, `for your ${dept} students`)
+      .replace(/in\s*\{\{\s*institution\s*\}\}\s*lectures/gi, `in ${dept} lectures`)
+      .replace(/for\s*\{\{\s*institution\s*\}\}/gi, `for ${dept}`)
+      .replace(/at\s*\{\{\s*institution\s*\}\}/gi, `in ${dept}`);
   }
 
   // 3. Fallbacks for remaining placeholders
-  const inst = hasInstitution ? vars.institution!.trim() : 'your university';
+  const inst = hasInstitution ? vars.institution!.trim() : 'your institution';
   const dept = hasDepartment ? vars.department!.trim() : 'your department';
   const role = vars.academic_role?.trim() || 'Educator';
-  const fname = hasFirstName ? vars.first_name!.trim() : (hasFullName ? vars.full_name!.trim().split(' ')[0] : 'Colleague');
-  const lname = hasLastName ? vars.last_name!.trim() : '';
-  const fullName = hasFullName ? vars.full_name!.trim() : (hasFirstName ? vars.first_name!.trim() : 'Educator');
+  const fname = derivedFirstName || 'Professor';
+  const lname = derivedLastName || 'Colleague';
+  const fullName = hasFullName ? vars.full_name!.trim() : (derivedFirstName ? derivedFirstName : 'Educator');
 
   return resolved
     .replace(/\{\{\s*first_name\s*\}\}/gi, fname)
@@ -340,8 +404,17 @@ serve(async (req: Request) => {
           email: item.recipient_email,
         };
 
-        const personalizedSubject = interpolateVariables(item.campaign_subject, vars);
-        const personalizedBodyText = interpolateVariables(item.campaign_body_text, vars);
+        const { data: recipientRow } = await supabase
+          .from('campaign_recipients')
+          .select('personalized_subject, personalized_body')
+          .eq('id', item.recipient_id)
+          .maybeSingle();
+
+        const baseSubject = recipientRow?.personalized_subject || item.campaign_subject;
+        const baseBodyText = recipientRow?.personalized_body || item.campaign_body_text;
+
+        const personalizedSubject = interpolateVariables(baseSubject, vars);
+        const personalizedBodyText = interpolateVariables(baseBodyText, vars);
         const personalizedBodyHtml = item.campaign_body_html
           ? interpolateVariables(item.campaign_body_html, vars)
           : undefined;

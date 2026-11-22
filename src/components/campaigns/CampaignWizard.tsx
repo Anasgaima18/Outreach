@@ -30,6 +30,7 @@ import {
   TEMPLATES_LIST,
   TEMPLATE_1_PLAINTEXT,
   TEMPLATE_2_BRANDED_HTML,
+  buildBrandedEmailHtml,
   interpolateVariables,
   lintEmailContent,
   validatePersonalizationFields,
@@ -85,6 +86,120 @@ export function CampaignWizard({
   const [subject, setSubject] = useState(TEMPLATE_1_PLAINTEXT.subject);
   const [bodyText, setBodyText] = useState(TEMPLATE_1_PLAINTEXT.bodyText);
   const [bodyHtml, setBodyHtml] = useState<string>('');
+
+  // Branded HTML Form Mode State (Visual Form vs Raw Code)
+  const [htmlEditorTab, setHtmlEditorTab] = useState<'visual' | 'code'>('visual');
+  const [visualSalutation, setVisualSalutation] = useState('Dear Professor {{last_name}},');
+  const [visualLeadText, setVisualLeadText] = useState(
+    'We noticed your teaching at {{institution}}. Maintaining sustained student attention during lectures can be challenging, especially with smartphone distraction.\n\nGamifyTL transforms student mobile devices into active lecture participation tools with zero student app installations:'
+  );
+  const [visualB1Title, setVisualB1Title] = useState('Zero Student Installs');
+  const [visualB1Text, setVisualB1Text] = useState(
+    'Students join in under 3 seconds via QR code or 6-digit room code at gamifytl.com/join on any mobile browser. No app downloads required.'
+  );
+  const [visualB2Title, setVisualB2Title] = useState('Interactive Classroom Activities');
+  const [visualB2Text, setVisualB2Text] = useState(
+    'Live Quiz Battles, Polls, Jumble Jam, and Collaborative problem solving built specifically for university auditoriums.'
+  );
+  const [visualB3Title, setVisualB3Title] = useState('Free Educator Plan');
+  const [visualB3Text, setVisualB3Text] = useState(
+    'Completely free for individual professors to create rooms, customize questions, and host live sessions.'
+  );
+  const [visualCtaLabel, setVisualCtaLabel] = useState('Explore GamifyTL Live Demo');
+  const [visualCtaUrl, setVisualCtaUrl] = useState('https://gamifytl.com/');
+
+  const syncVisualToHtml = (updates?: Partial<{
+    salutation: string;
+    leadText: string;
+    b1Title: string;
+    b1Text: string;
+    b2Title: string;
+    b2Text: string;
+    b3Title: string;
+    b3Text: string;
+    ctaLabel: string;
+    ctaUrl: string;
+  }>) => {
+    const sal = updates?.salutation ?? visualSalutation;
+    const lead = updates?.leadText ?? visualLeadText;
+    const b1T = updates?.b1Title ?? visualB1Title;
+    const b1X = updates?.b1Text ?? visualB1Text;
+    const b2T = updates?.b2Title ?? visualB2Title;
+    const b2X = updates?.b2Text ?? visualB2Text;
+    const b3T = updates?.b3Title ?? visualB3Title;
+    const b3X = updates?.b3Text ?? visualB3Text;
+    const ctaL = updates?.ctaLabel ?? visualCtaLabel;
+    const ctaU = updates?.ctaUrl ?? visualCtaUrl;
+
+    const leadHtml = lead
+      .split('\n\n')
+      .filter(Boolean)
+      .map((p) => `<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#5f6368;">${p}</p>`)
+      .join('');
+
+    const innerHtml = `
+      <p style="margin:0 0 16px;font-size:15px;line-height:1.6;color:#111111;">
+        ${sal}
+      </p>
+      ${leadHtml}
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="margin:0 0 24px;border:1px solid #e5e7eb;border-radius:12px;background:#f9fafb;">
+        <tr>
+          <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+              <tr>
+                <td valign="top" style="width:24px;font-size:14px;line-height:1;color:#ff3b30;font-weight:700;">&#10003;</td>
+                <td valign="top" style="font-size:13px;line-height:1.5;color:#111111;">
+                  <strong>${b1T}:</strong> ${b1X}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 16px;border-bottom:1px solid #e5e7eb;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+              <tr>
+                <td valign="top" style="width:24px;font-size:14px;line-height:1;color:#ff3b30;font-weight:700;">&#10003;</td>
+                <td valign="top" style="font-size:13px;line-height:1.5;color:#111111;">
+                  <strong>${b2T}:</strong> ${b2X}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:14px 16px;">
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+              <tr>
+                <td valign="top" style="width:24px;font-size:14px;line-height:1;color:#ff3b30;font-weight:700;">&#10003;</td>
+                <td valign="top" style="font-size:13px;line-height:1.5;color:#111111;">
+                  <strong>${b3T}:</strong> ${b3X}
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+      <div style="text-align:center;margin:28px 0 24px;">
+        <a href="${ctaU}" style="display:inline-block;padding:14px 26px;background:#ff3b30;border:1px solid #ff3b30;border-radius:12px;font-size:14px;line-height:1;font-weight:700;color:#ffffff;text-decoration:none;font-family:Arial,Helvetica,sans-serif;text-align:center;">
+          ${ctaL} &rarr;
+        </a>
+      </div>
+      <p style="margin:0 0 4px;font-size:13px;line-height:1.6;color:#5f6368;">Sincerely,</p>
+      <p style="margin:0;font-size:13px;line-height:1.6;color:#111111;font-weight:700;">GamifyTL Academic Outreach Team</p>
+    `;
+
+    const fullHtml = buildBrandedEmailHtml({
+      title: subject || 'GamifyTL for {{institution}}',
+      preheader: 'Zero-install interactive classroom engagement for university lectures.',
+      innerHtml,
+    });
+
+    setBodyHtml(fullHtml);
+    setBodyText(
+      `${sal}\n\n${lead}\n\n- ${b1T}: ${b1X}\n- ${b2T}: ${b2X}\n- ${b3T}: ${b3X}\n\n${ctaL}: ${ctaU}\n\nSincerely,\nGamifyTL Academic Outreach Team\nsupport@northnode.live\nhttps://gamifytl.com/`
+    );
+  };
 
   // Preview Mode
   const [previewViewport, setPreviewViewport] = useState<'desktop' | 'mobile'>('desktop');
@@ -1022,17 +1137,54 @@ export function CampaignWizard({
           <div className="grid gap-6 lg:grid-cols-2">
             {/* Left: Composer */}
             <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-xs space-y-4">
-              <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
-                <FileText className="h-4 w-4 text-gray-600" />
-                Email Message Editor ({templateFormat === 'plain' ? 'Plain Text' : 'Branded HTML'})
-              </h4>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-100 pb-3">
+                <h4 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-gray-600" />
+                  Email Message Editor ({templateFormat === 'plain' ? 'Plain Text' : 'Branded HTML'})
+                </h4>
 
-              <Input
-                label="Subject Line"
-                required
-                value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-              />
+                {templateFormat === 'html' && (
+                  <div className="inline-flex rounded-lg bg-gray-100 p-0.5 border border-gray-200 text-xs self-start sm:self-auto">
+                    <button
+                      type="button"
+                      onClick={() => setHtmlEditorTab('visual')}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition-colors ${
+                        htmlEditorTab === 'visual'
+                          ? 'bg-white text-blue-700 shadow-xs'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Visual Content Form
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHtmlEditorTab('code')}
+                      className={`px-2.5 py-1 rounded-md font-semibold transition-colors ${
+                        htmlEditorTab === 'code'
+                          ? 'bg-white text-blue-700 shadow-xs'
+                          : 'text-gray-600 hover:text-gray-900'
+                      }`}
+                    >
+                      Raw HTML Code
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-1">
+                <Input
+                  label="Subject Line"
+                  required
+                  value={subject}
+                  onChange={(e) => setSubject(e.target.value)}
+                />
+                <div className="flex items-center gap-1.5 text-[11px] text-gray-500 pt-0.5">
+                  <span className="font-semibold text-gray-600">Sample Recipient Preview:</span>
+                  <span className="font-medium text-gray-900 bg-gray-100 px-2 py-0.5 rounded border border-gray-200 truncate max-w-sm">
+                    {interpolateVariables(subject, sampleContact) || '—'}
+                  </span>
+                </div>
+              </div>
 
               {/* Tag inserters */}
               <div className="space-y-1.5">
@@ -1064,10 +1216,132 @@ export function CampaignWizard({
                   onChange={(e) => setBodyText(e.target.value)}
                   className="font-mono text-xs leading-relaxed"
                 />
+              ) : htmlEditorTab === 'visual' ? (
+                /* Visual Content Editor (No Scary HTML Code) */
+                <div className="space-y-4 rounded-xl border border-blue-100 bg-blue-50/20 p-4">
+                  <div className="flex items-center justify-between border-b border-blue-100/60 pb-2">
+                    <span className="text-xs font-bold text-gray-900">Email Body & Highlights Form</span>
+                    <span className="text-[10px] text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full font-medium">
+                      Compiles to GamifyTL Email Branding
+                    </span>
+                  </div>
+
+                  <Input
+                    label="Salutation / Greeting"
+                    value={visualSalutation}
+                    onChange={(e) => {
+                      setVisualSalutation(e.target.value);
+                      syncVisualToHtml({ salutation: e.target.value });
+                    }}
+                  />
+
+                  <Textarea
+                    label="Message Context & Introduction"
+                    rows={3}
+                    value={visualLeadText}
+                    onChange={(e) => {
+                      setVisualLeadText(e.target.value);
+                      syncVisualToHtml({ leadText: e.target.value });
+                    }}
+                  />
+
+                  <div className="space-y-2">
+                    <label className="block text-xs font-semibold text-gray-700">
+                      Feature Highlights (3 Bullet Cards)
+                    </label>
+                    <div className="grid gap-2 text-xs">
+                      <div className="rounded-lg border border-gray-200 bg-white p-2.5 space-y-1.5 shadow-2xs">
+                        <Input
+                          placeholder="Feature 1 Title"
+                          value={visualB1Title}
+                          onChange={(e) => {
+                            setVisualB1Title(e.target.value);
+                            syncVisualToHtml({ b1Title: e.target.value });
+                          }}
+                          className="text-xs font-semibold"
+                        />
+                        <Textarea
+                          rows={2}
+                          placeholder="Feature 1 Description"
+                          value={visualB1Text}
+                          onChange={(e) => {
+                            setVisualB1Text(e.target.value);
+                            syncVisualToHtml({ b1Text: e.target.value });
+                          }}
+                          className="text-xs"
+                        />
+                      </div>
+
+                      <div className="rounded-lg border border-gray-200 bg-white p-2.5 space-y-1.5 shadow-2xs">
+                        <Input
+                          placeholder="Feature 2 Title"
+                          value={visualB2Title}
+                          onChange={(e) => {
+                            setVisualB2Title(e.target.value);
+                            syncVisualToHtml({ b2Title: e.target.value });
+                          }}
+                          className="text-xs font-semibold"
+                        />
+                        <Textarea
+                          rows={2}
+                          placeholder="Feature 2 Description"
+                          value={visualB2Text}
+                          onChange={(e) => {
+                            setVisualB2Text(e.target.value);
+                            syncVisualToHtml({ b2Text: e.target.value });
+                          }}
+                          className="text-xs"
+                        />
+                      </div>
+
+                      <div className="rounded-lg border border-gray-200 bg-white p-2.5 space-y-1.5 shadow-2xs">
+                        <Input
+                          placeholder="Feature 3 Title"
+                          value={visualB3Title}
+                          onChange={(e) => {
+                            setVisualB3Title(e.target.value);
+                            syncVisualToHtml({ b3Title: e.target.value });
+                          }}
+                          className="text-xs font-semibold"
+                        />
+                        <Textarea
+                          rows={2}
+                          placeholder="Feature 3 Description"
+                          value={visualB3Text}
+                          onChange={(e) => {
+                            setVisualB3Text(e.target.value);
+                            syncVisualToHtml({ b3Text: e.target.value });
+                          }}
+                          className="text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    <Input
+                      label="CTA Button Label"
+                      value={visualCtaLabel}
+                      onChange={(e) => {
+                        setVisualCtaLabel(e.target.value);
+                        syncVisualToHtml({ ctaLabel: e.target.value });
+                      }}
+                    />
+                    <Input
+                      label="CTA Button URL"
+                      value={visualCtaUrl}
+                      onChange={(e) => {
+                        setVisualCtaUrl(e.target.value);
+                        syncVisualToHtml({ ctaUrl: e.target.value });
+                      }}
+                    />
+                  </div>
+                </div>
               ) : (
+                /* Raw HTML Code Editor (Advanced / Fallback) */
                 <div className="space-y-4">
                   <Textarea
-                    label="HTML Email Content"
+                    label="Raw HTML Email Code"
                     required
                     rows={12}
                     value={bodyHtml}

@@ -8,6 +8,7 @@
  */
 
 import { GAMIFYTL_20_TEMPLATES } from './verified-templates';
+import { interpolateVariables } from './templates';
 import type { ProfessionalTemplate, TemplateFormat } from '../types/templates.types';
 import type { Contact } from '../types/database.types';
 
@@ -181,9 +182,14 @@ export function matchAndRandomizeTemplate(
       ? options.preferredSubjectIndex
       : (positiveHash >> 2) % 3;
 
-  const subject = selectedTemplate.subjectAlternatives[subjectIndex] || selectedTemplate.subject;
-  const bodyText = selectedTemplate.bodyText;
-  const bodyHtml = format === 'html' ? selectedTemplate.bodyHtml : undefined;
+  const rawSubject = selectedTemplate.subjectAlternatives[subjectIndex] || selectedTemplate.subject;
+  const rawBodyText = selectedTemplate.bodyText;
+  const rawBodyHtml = format === 'html' ? selectedTemplate.bodyHtml : undefined;
+
+  // Fully resolve personalization variables with the contact's verified metadata and smart fallbacks
+  const subject = interpolateVariables(rawSubject, contact);
+  const bodyText = interpolateVariables(rawBodyText, contact);
+  const bodyHtml = rawBodyHtml ? interpolateVariables(rawBodyHtml, contact) : undefined;
 
   return {
     contactId: contact.id,

@@ -109,6 +109,35 @@ describe('Dynamic Template Matcher & Randomizer Unit Tests', () => {
       expect(matchA.subject).toBeDefined();
       expect(matchB.subject).toBeDefined();
     });
+
+    it('cleanly resolves subject lines without un-interpolated {{department}} tags for general faculty', () => {
+      const generalFaculty: Contact = {
+        id: 'contact-anas-1',
+        user_id: '00000000-0000-0000-0000-000000000000',
+        first_name: 'Mohammed',
+        last_name: 'Anas',
+        full_name: 'Mohammed Anas',
+        email: 'anas@gmail.com',
+        institution: null,
+        department: null,
+        academic_role: 'General Faculty',
+        notes: null,
+        country: null,
+        website: null,
+        status: 'active',
+        contact_source: 'manual',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+
+      const match = matchAndRandomizeTemplate(generalFaculty, { format: 'plain' });
+      expect(match.subject).not.toContain('{{department}}');
+      expect(match.subject).not.toContain('{{institution}}');
+      expect(match.subject).not.toContain('your your department');
+      expect(match.bodyText).not.toContain('{{department}}');
+      expect(match.bodyText).not.toContain('{{last_name}}');
+      expect(match.bodyText).toContain('Dear Professor Anas,');
+    });
   });
 
   describe('Batch Matching & Distribution Across Cohorts', () => {
