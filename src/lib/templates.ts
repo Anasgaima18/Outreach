@@ -203,7 +203,7 @@ Would you be open to a brief 5-minute walkthrough, or exploring a live demo sess
 
 Sincerely,
 
-GamifyTL Academic Outreach
+GamifyTL
 NorthNode Technologies
 support@northnode.live
 https://gamifytl.com/
@@ -283,7 +283,10 @@ const BRANDED_HTML_INNER = `<p style="margin:0 0 16px;font-size:15px;line-height
   Sincerely,
 </p>
 <p style="margin:0;font-size:13px;line-height:1.6;color:#111111;font-weight:700;">
-  GamifyTL Academic Outreach Team
+  GamifyTL
+</p>
+<p style="margin:0;font-size:12px;line-height:1.5;color:#5f6368;">
+  NorthNode Technologies · gamifytl.com
 </p>`;
 
 export const TEMPLATE_2_BRANDED_HTML: EmailTemplate = {
@@ -307,7 +310,7 @@ GamifyTL transforms student mobile devices into active lecture participation too
 Explore GamifyTL Live Demo at https://gamifytl.com/
 
 Sincerely,
-GamifyTL Academic Outreach Team
+GamifyTL
 NorthNode Technologies
 support@northnode.live
 https://gamifytl.com/
@@ -339,7 +342,7 @@ export const GAMIFYTL_TEMPLATES: Record<string, EmailTemplate> = {
   <li><strong>Resource Drop:</strong> Share slides, problem sets, and code files directly to student browsers instantly.</li>
 </ul>
 <p>Would you be open to a 5-minute preview of how GamifyTL works in live classroom settings?</p>
-<p>Sincerely,<br/>GamifyTL Academic Outreach Team<br/><a href="https://gamifytl.com/">gamifytl.com</a></p>`,
+<p>Sincerely,<br/>GamifyTL<br/>NorthNode Technologies<br/><a href="https://gamifytl.com/">gamifytl.com</a></p>`,
   },
 
   templateB_zeroInstall: {
@@ -361,7 +364,8 @@ GamifyTL provides instant, zero-install classroom polling and quiz battles:
 You can try a live demo at https://gamifytl.com/. Let us know if you would like a personalized demonstration for your upcoming courses at {{institution}}.
 
 Best regards,
-GamifyTL Outreach
+GamifyTL
+NorthNode Technologies
 `,
     bodyHtml: `<p>Dear Professor {{last_name}},</p>
 <p>Most classroom response systems require student account creation or app downloads, eating into valuable lecture minutes.</p>
@@ -372,7 +376,7 @@ GamifyTL Outreach
   <li>Immediate visual feedback on student comprehension for {{department}} topics.</li>
 </ul>
 <p>You can try a live demo at <a href="https://gamifytl.com/">gamifytl.com</a>. Let us know if you would like a personalized demonstration for your upcoming courses at {{institution}}.</p>
-<p>Best regards,<br/>GamifyTL Outreach</p>`,
+<p>Best regards,<br/>GamifyTL<br/>NorthNode Technologies</p>`,
   },
 
   templateC_resourceDrop: {
@@ -391,13 +395,14 @@ GamifyTL includes Resource Drop, allowing professors to push files directly to a
 Explore more at https://gamifytl.com/.
 
 Kind regards,
-GamifyTL Team
+GamifyTL
+NorthNode Technologies
 `,
     bodyHtml: `<p>Dear Professor {{last_name}},</p>
 <p>Sharing lecture resources, datasets, or code files during live class usually requires LMS logins or Google Drive links.</p>
 <p>GamifyTL includes <strong>Resource Drop</strong>, allowing professors to push files directly to all connected student screens during class with one click. Combined with our 8 live classroom mini-games, it provides a seamless engagement platform.</p>
 <p>Explore more at <a href="https://gamifytl.com/">gamifytl.com</a>.</p>
-<p>Kind regards,<br/>GamifyTL Team</p>`,
+<p>Kind regards,<br/>GamifyTL<br/>NorthNode Technologies</p>`,
   },
 
   followUp: {
@@ -414,12 +419,13 @@ Following up briefly on my earlier note regarding GamifyTL's zero-install classr
 If you have a couple of minutes this week, you can test a live game session at https://gamifytl.com/ or let us know if you'd like a brief walkthrough.
 
 Best regards,
-GamifyTL Academic Outreach Team
+GamifyTL
+NorthNode Technologies
 `,
     bodyHtml: `<p>Dear Professor {{last_name}},</p>
 <p>Following up briefly on my earlier note regarding GamifyTL's zero-install classroom engagement platform for {{institution}}.</p>
 <p>If you have a couple of minutes this week, you can test a live game session at <a href="https://gamifytl.com/">gamifytl.com</a> or let us know if you'd like a brief walkthrough.</p>
-<p>Best regards,<br/>GamifyTL Academic Outreach Team</p>`,
+<p>Best regards,<br/>GamifyTL<br/>NorthNode Technologies</p>`,
   },
 };
 

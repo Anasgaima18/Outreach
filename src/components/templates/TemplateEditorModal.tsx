@@ -69,7 +69,7 @@ export function TemplateEditorModal({
       setSubject('');
       setSubjectAlt2('');
       setSubjectAlt3('');
-      setBodyText(`Dear Professor {{last_name}},\n\nI am writing to share how faculty at {{institution}} are using GamifyTL for quick interactive classroom response activities.\n\nStudents scan a QR code on any phone browser to join quiz battles in under three seconds with zero app installs.\n\nWould you be open to a brief walkthrough at https://gamifytl.com/?\n\nSincerely,\nAcademic Outreach\nNorthNode Technologies · GamifyTL`);
+      setBodyText(`Dear Professor {{last_name}},\n\nI am writing to share how faculty at {{institution}} are using GamifyTL for quick interactive classroom response activities.\n\nStudents scan a QR code on any phone browser to join quiz battles in under three seconds with zero app installs.\n\nWould you be open to a brief walkthrough at https://gamifytl.com/?\n\nSincerely,\nGamifyTL\nNorthNode Technologies`);
       setBodyHtml('');
       setFormat('plain');
       setDisciplines('Multidisciplinary');

@@ -88,7 +88,7 @@ export function createCustomTemplate(input: {
     bodyHtml: input.bodyHtml?.trim() || undefined,
     ctaLabel: input.ctaLabel || 'Learn More',
     ctaUrl: input.ctaUrl || 'https://gamifytl.com/',
-    signature: 'Academic Outreach Team\nNorthNode Technologies · GamifyTL\nsupport@northnode.live',
+    signature: 'GamifyTL\nNorthNode Technologies\nsupport@northnode.live',
     followUpApproach: input.followUpApproach || 'Follow up politely after 4 business days.',
     format: input.format || 'plain',
     status: input.status || 'published',

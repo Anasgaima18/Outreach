@@ -91,24 +91,24 @@ export function CampaignWizard({
   const [htmlEditorTab, setHtmlEditorTab] = useState<'visual' | 'code'>('visual');
   const [visualSalutation, setVisualSalutation] = useState('Dear Professor {{last_name}},');
   const [visualLeadText, setVisualLeadText] = useState(
-    'We noticed your teaching at {{institution}}. Maintaining sustained student attention during lectures can be challenging, especially with smartphone distraction.\n\nGamifyTL transforms student mobile devices into active lecture participation tools with zero student app installations:'
+    'Reaching out briefly regarding active classroom polling and comprehension checks for your courses at {{institution}}.\n\nMost in-lecture response tools require students to install mobile apps or register accounts, which creates friction in university classrooms. We built GamifyTL to eliminate that completely:'
   );
-  const [visualB1Title, setVisualB1Title] = useState('Zero Student Installs');
+  const [visualB1Title, setVisualB1Title] = useState('Zero Student App Installs');
   const [visualB1Text, setVisualB1Text] = useState(
-    'Students join in under 3 seconds via QR code or 6-digit room code at gamifytl.com/join on any mobile browser. No app downloads required.'
+    'Students scan a QR code from your lecture slide on any phone browser and join in 3 seconds. No app downloads, accounts, or logins required.'
   );
-  const [visualB2Title, setVisualB2Title] = useState('Interactive Classroom Activities');
+  const [visualB2Title, setVisualB2Title] = useState('Interactive Classroom Mini-Games');
   const [visualB2Text, setVisualB2Text] = useState(
-    'Live Quiz Battles, Polls, Jumble Jam, and Collaborative problem solving built specifically for university auditoriums.'
+    'Run 90-second Quiz Battles, live polls, and quick knowledge checks between lecture topics to test comprehension in real time.'
   );
-  const [visualB3Title, setVisualB3Title] = useState('Free Educator Plan');
+  const [visualB3Title, setVisualB3Title] = useState('Free for Faculty');
   const [visualB3Text, setVisualB3Text] = useState(
-    'Completely free for individual professors to create rooms, customize questions, and host live sessions.'
+    'Completely free for individual instructors to create rooms, customize questions, and host live sessions.'
   );
-  const [visualCtaLabel, setVisualCtaLabel] = useState('Explore GamifyTL Live Demo');
+  const [visualCtaLabel, setVisualCtaLabel] = useState('Preview Live Game Room');
   const [visualCtaUrl, setVisualCtaUrl] = useState('https://gamifytl.com/');
-  const [visualSenderName, setVisualSenderName] = useState(() => accounts[0]?.display_name || 'Mohammed Anas');
-  const [visualSenderTitle, setVisualSenderTitle] = useState('Founder, GamifyTL · NorthNode Technologies');
+  const [visualSenderName, setVisualSenderName] = useState('GamifyTL');
+  const [visualSenderTitle, setVisualSenderTitle] = useState('NorthNode Technologies');
 
   const syncVisualToHtml = (updates?: Partial<{
     salutation: string;
@@ -1346,8 +1346,8 @@ export function CampaignWizard({
 
                   <div className="grid gap-2 sm:grid-cols-2 pt-2 border-t border-blue-100/70">
                     <Input
-                      label="Personal Sender Name"
-                      placeholder="e.g. Mohammed Anas"
+                      label="Sender Name / Brand"
+                      placeholder="e.g. GamifyTL"
                       value={visualSenderName}
                       onChange={(e) => {
                         setVisualSenderName(e.target.value);
@@ -1355,8 +1355,8 @@ export function CampaignWizard({
                       }}
                     />
                     <Input
-                      label="Personal Role / Title"
-                      placeholder="e.g. Founder, GamifyTL · NorthNode Technologies"
+                      label="Company / Affiliation"
+                      placeholder="e.g. NorthNode Technologies"
                       value={visualSenderTitle}
                       onChange={(e) => {
                         setVisualSenderTitle(e.target.value);

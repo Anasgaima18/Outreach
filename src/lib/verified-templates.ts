@@ -146,8 +146,8 @@ Would you be open to a brief 5-minute conversation or testing a live demo at htt
 
 Sincerely,
 
-Academic Outreach Team
-NorthNode Technologies · GamifyTL
+GamifyTL
+NorthNode Technologies
 support@northnode.live
 https://gamifytl.com/`,
     bodyHtml: wrapAccessibleHtml({
@@ -167,14 +167,14 @@ https://gamifytl.com/`,
       ctaLabel: 'Explore GamifyTL Demo',
       ctaUrl: 'https://gamifytl.com/',
       signatureLines: [
-        'Academic Outreach Team',
-        'NorthNode Technologies · GamifyTL',
+        'GamifyTL',
+        'NorthNode Technologies',
         'support@northnode.live · gamifytl.com',
       ],
     }),
     ctaLabel: 'Explore GamifyTL Demo',
     ctaUrl: 'https://gamifytl.com/',
-    signature: 'Academic Outreach Team\nNorthNode Technologies · GamifyTL\nsupport@northnode.live',
+    signature: 'GamifyTL\nNorthNode Technologies\nsupport@northnode.live',
     followUpApproach: 'Follow up in 4 business days with a short 2-sentence note referencing the zero-install join flow.',
     format: 'plain',
     status: 'published',
@@ -478,8 +478,8 @@ If you are interested, you can test a live mock session at https://gamifytl.com/
 
 Sincerely,
 
-Academic Outreach
-NorthNode Technologies · GamifyTL
+GamifyTL
+NorthNode Technologies
 https://gamifytl.com/`,
     bodyHtml: wrapAccessibleHtml({
       title: 'Auditorium Engagement at {{institution}}',
@@ -497,14 +497,14 @@ https://gamifytl.com/`,
       ctaLabel: 'Explore Auditorium Features',
       ctaUrl: 'https://gamifytl.com/',
       signatureLines: [
-        'Academic Outreach',
-        'NorthNode Technologies · GamifyTL',
+        'GamifyTL',
+        'NorthNode Technologies',
         'support@northnode.live',
       ],
     }),
     ctaLabel: 'Explore Auditorium Features',
     ctaUrl: 'https://gamifytl.com/',
-    signature: 'Academic Outreach\nNorthNode Technologies · GamifyTL',
+    signature: 'GamifyTL\nNorthNode Technologies',
     followUpApproach: 'Follow up in 5 days with scalability specifications for campus Wi-Fi environments.',
     format: 'plain',
     status: 'published',
@@ -1408,8 +1408,8 @@ Thank you for your time and dedication to your students.
 
 Sincerely,
 
-Academic Outreach Team
-NorthNode Technologies · GamifyTL
+GamifyTL
+NorthNode Technologies
 support@northnode.live
 https://gamifytl.com/`,
     bodyHtml: wrapAccessibleHtml({
@@ -1424,14 +1424,14 @@ https://gamifytl.com/`,
       ctaLabel: 'Preview Live Mock Room',
       ctaUrl: 'https://gamifytl.com/',
       signatureLines: [
-        'Academic Outreach Team',
-        'NorthNode Technologies · GamifyTL',
+        'GamifyTL',
+        'NorthNode Technologies',
         'support@northnode.live',
       ],
     }),
     ctaLabel: 'Preview Live Mock Room',
     ctaUrl: 'https://gamifytl.com/',
-    signature: 'Academic Outreach Team\nNorthNode Technologies · GamifyTL',
+    signature: 'GamifyTL\nNorthNode Technologies',
     followUpApproach: 'Final polite touchpoint. If no reply, mark contact as completed/follow-up satisfied.',
     format: 'plain',
     status: 'published',
