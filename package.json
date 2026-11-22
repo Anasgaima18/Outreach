@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && node -e \"const fs=require('fs');fs.copyFileSync('outreach-site/privacy.html','dist/privacy.html');fs.copyFileSync('outreach-site/index.html','dist/landing.html');console.log('outreach-site files copied to dist/')\"",
+    "build": "tsc && vite build && node scripts/copy-static-pages.cjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:e2e": "vitest run tests/e2e",
