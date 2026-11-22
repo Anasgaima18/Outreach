@@ -119,7 +119,7 @@ export function buildBrandedEmailHtml(params: {
             <tr>
               <td style="padding:22px 12px 0;text-align:center;">
                 <p style="margin:0 0 6px;font-size:12px;line-height:1.6;color:#8a8f98;">
-                  ${escapeHtml(GAMIFYTL_BRAND.legalName)} · ${escapeHtml(GAMIFYTL_BRAND.address)} · GSTIN ${GAMIFYTL_BRAND.gstin}
+                  ${escapeHtml(GAMIFYTL_BRAND.name)} · ${escapeHtml(GAMIFYTL_BRAND.legalName)}
                 </p>
                 <p style="margin:0;font-size:12px;line-height:1.6;color:#8a8f98;">
                   Questions? Reply directly to this email or write to
@@ -197,7 +197,7 @@ How professors use GamifyTL in lectures:
 - Zero student app installs: Students join in under 3 seconds by scanning a QR code or entering a 6-digit room code at gamifytl.com/join on any browser.
 - Interactive classroom activities: Live Quiz Battles, Polls, Knowledge Checks, and Collaborative Jigsaws designed specifically for university auditoriums.
 - Resource Drop: Distribute lecture slides, problem sets, and code files directly to connected student devices during live class with one click, without LMS logins.
-- Free educator plan: Completely free for individual professors and educators to create rooms and host live sessions.
+- Zero student licensing fees: Students participate with zero app downloads or account purchases. Faculty can evaluate with complimentary live sessions.
 
 Would you be open to a brief 5-minute walkthrough, or exploring a live demo session at https://gamifytl.com/?
 
@@ -264,7 +264,7 @@ const BRANDED_HTML_INNER = `<p style="margin:0 0 16px;font-size:15px;line-height
         <tr>
           <td valign="top" style="width:24px;font-size:14px;line-height:1;color:#ff3b30;font-weight:700;">&#10003;</td>
           <td valign="top" style="font-size:13px;line-height:1.5;color:#111111;">
-            <strong>Free Educator Plan:</strong> Free for individual professors to create rooms, customize questions, and host live sessions.
+            <strong>Zero Student Licensing Fees:</strong> Students join free on any device with zero app downloads or accounts. Faculty can evaluate with complimentary live sessions.
           </td>
         </tr>
       </table>
@@ -305,7 +305,7 @@ GamifyTL transforms student mobile devices into active lecture participation too
 - Zero Student Installs: Students join in under 3 seconds via QR code or 6-digit room code at gamifytl.com/join on any mobile browser. No app downloads or student account creation required.
 - Interactive Classroom Activities: Live Quiz Battles, Polls, Jumble Jam, Flow Connect, and Collaborative Jigsaws built specifically for university auditoriums.
 - Resource Drop: Push lecture slides, datasets, and problem sets directly to connected student screens during class with one click.
-- Free Educator Plan: Free for individual professors to create rooms, customize questions, and host live sessions.
+- Zero Student Licensing Fees: Students participate with zero app downloads or account purchases. Faculty can evaluate with complimentary live sessions.
 
 Explore GamifyTL Live Demo at https://gamifytl.com/
 

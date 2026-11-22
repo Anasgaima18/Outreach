@@ -101,9 +101,9 @@ export function CampaignWizard({
   const [visualB2Text, setVisualB2Text] = useState(
     'Run 90-second Quiz Battles, live polls, and quick knowledge checks between lecture topics to test comprehension in real time.'
   );
-  const [visualB3Title, setVisualB3Title] = useState('Free for Faculty');
+  const [visualB3Title, setVisualB3Title] = useState('Zero Student Licensing Fees');
   const [visualB3Text, setVisualB3Text] = useState(
-    'Completely free for individual instructors to create rooms, customize questions, and host live sessions.'
+    'Students participate with zero app downloads or account purchases. Faculty can evaluate with complimentary live sessions.'
   );
   const [visualCtaLabel, setVisualCtaLabel] = useState('Preview Live Game Room');
   const [visualCtaUrl, setVisualCtaUrl] = useState('https://gamifytl.com/');

@@ -45,7 +45,7 @@ describe('GamifyTL Email Template System — Two Required Templates', () => {
       expect(text).toContain('gamifytl.com/join');
       expect(text).toContain('Quiz Battles');
       expect(text).toContain('Resource Drop');
-      expect(text).toContain('Free educator plan');
+      expect(text).toContain('Zero student licensing fees');
       expect(text).toContain('https://gamifytl.com/');
       expect(text).toContain('NorthNode Technologies');
       expect(text).toContain('support@northnode.live');
@@ -112,10 +112,9 @@ describe('GamifyTL Email Template System — Two Required Templates', () => {
 
     it('includes verified company contact information and support in footer', () => {
       const html = TEMPLATE_2_BRANDED_HTML.bodyHtml || '';
+      expect(html).toContain(GAMIFYTL_BRAND.name);
       expect(html).toContain(GAMIFYTL_BRAND.legalName);
-      expect(html).toContain(GAMIFYTL_BRAND.address);
       expect(html).toContain(GAMIFYTL_BRAND.supportEmail);
-      expect(html).toContain(GAMIFYTL_BRAND.gstin);
     });
 
     it('generates standard RFC 2822 multipart/alternative MIME with plain text fallback', () => {
