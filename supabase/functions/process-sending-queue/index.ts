@@ -263,8 +263,12 @@ serve(async (req: Request) => {
           continue;
         }
 
-        if (item.sent_today_count >= item.daily_limit) {
-          const rateLimitMsg = `Daily sending limit reached for ${item.sender_email} (${item.sent_today_count}/${item.daily_limit})`;
+        // Enforce strict platform-wide daily sending ceiling of 50 emails per sender account per day
+        const DAILY_SENDING_CAP = 50;
+        const effectiveDailyLimit = Math.min(item.daily_limit || DAILY_SENDING_CAP, DAILY_SENDING_CAP);
+
+        if (item.sent_today_count >= effectiveDailyLimit) {
+          const rateLimitMsg = `Daily sending limit reached for ${item.sender_email} (${item.sent_today_count}/${effectiveDailyLimit} emails sent today - strict 50 emails/day cap)`;
           errors.push(rateLimitMsg);
 
           // Mark account as rate_limited
@@ -312,9 +316,22 @@ serve(async (req: Request) => {
           .eq('id', item.contact_id)
           .maybeSingle();
 
+        // D. Repeated email check: verify if recipient was already sent an email previously
+        const { data: priorSent } = await supabase
+          .from('campaign_recipients')
+          .select('id')
+          .eq('contact_id', item.contact_id)
+          .eq('status', 'sent')
+          .neq('id', item.recipient_id)
+          .limit(1)
+          .maybeSingle();
+
+        const isRepeatedSend = Boolean(priorSent) || contactRecord?.status === 'contacted';
+
         const isSuppressed =
           Boolean(suppressionRecord) ||
           Boolean(priorReply) ||
+          isRepeatedSend ||
           contactRecord?.status === 'unsubscribed' ||
           contactRecord?.status === 'bounced' ||
           contactRecord?.status === 'suppressed' ||
@@ -322,8 +339,10 @@ serve(async (req: Request) => {
 
         if (isSuppressed) {
           const suppressionReason =
-            suppressionRecord?.reason ||
-            (priorReply ? 'prior_reply' : contactRecord?.status || 'suppressed');
+            isRepeatedSend
+              ? 'repeated_email_already_sent'
+              : (suppressionRecord?.reason ||
+                (priorReply ? 'prior_reply' : contactRecord?.status || 'suppressed'));
 
           // Mark recipient as suppressed
           await supabase
@@ -493,6 +512,15 @@ serve(async (req: Request) => {
             updated_at: now,
           })
           .eq('id', item.account_id);
+
+        // Update contact status to 'contacted' to prevent repeated sends
+        await supabase
+          .from('contacts')
+          .update({
+            status: 'contacted',
+            updated_at: now,
+          })
+          .eq('id', item.contact_id);
 
         item.sent_today_count += 1;
         processedRecipientIds.add(item.recipient_id);

@@ -49,7 +49,7 @@ export function SettingsPage() {
     setSaving(true);
     setSaveFeedback(null);
 
-    const safeLimit = Math.max(1, Math.min(Number(dailyLimit) || 50, 500));
+    const safeLimit = Math.max(1, Math.min(Number(dailyLimit) || 50, 50));
     const safeMin = Math.max(5, Number(minDelay) || 20);
     const safeMax = Math.max(safeMin, Number(maxDelay) || 60);
 
@@ -167,13 +167,13 @@ export function SettingsPage() {
                 <input
                   type="number"
                   min={1}
-                  max={500}
+                  max={50}
                   value={dailyLimit}
-                  onChange={(e) => setDailyLimit(Number(e.target.value))}
+                  onChange={(e) => setDailyLimit(Math.min(50, Math.max(1, Number(e.target.value))))}
                   className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-semibold text-gray-900 focus:border-blue-500 focus:outline-none"
                 />
                 <p className="text-[11px] text-gray-500">
-                  Maximum daily emails allowed per connected Gmail account (up to Google's personal limit of 500/day).
+                  Strict restriction: Maximum 50 emails allowed per connected Gmail account per day.
                 </p>
               </div>
 
@@ -226,13 +226,10 @@ export function SettingsPage() {
                           onChange={(e) => handleUpdateIndividualLimit(acc.id, Number(e.target.value))}
                           className="rounded-lg border border-gray-300 bg-white px-2 py-1 text-xs font-semibold text-gray-800 focus:border-blue-500 focus:outline-none"
                         >
+                          <option value={10}>10/day</option>
                           <option value={20}>20/day</option>
-                          <option value={50}>50/day (Default)</option>
-                          <option value={100}>100/day</option>
-                          <option value={150}>150/day</option>
-                          <option value={200}>200/day</option>
-                          <option value={300}>300/day</option>
-                          <option value={500}>500/day (Max)</option>
+                          <option value={35}>35/day</option>
+                          <option value={50}>50/day (Max Limit)</option>
                         </select>
                       </div>
                     </div>

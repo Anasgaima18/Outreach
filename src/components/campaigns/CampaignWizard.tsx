@@ -19,6 +19,7 @@ import {
   Save,
   MailCheck,
   CheckCircle2,
+  AlertCircle,
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Input } from '../ui/Input';
@@ -47,6 +48,7 @@ import { matchAndRandomizeBatch, type BatchMatchSummary } from '../../lib/dynami
 import { HumanApprovalGateModal, type ApprovalModalPayload } from './HumanApprovalGateModal';
 import type { Contact, ConnectedAccount, Campaign } from '../../types/database.types';
 import type { CreateCampaignInput } from '../../hooks/useCampaigns';
+import { supabase } from '../../lib/supabase';
 
 interface CampaignWizardProps {
   accounts: ConnectedAccount[];
@@ -254,37 +256,112 @@ export function CampaignWizard({
     [accounts, accountId, activeAccounts]
   );
 
-  // Filtered contacts in Step 2
-  const filteredContacts = useMemo(() => {
-    if (!recipientSearch.trim()) return contacts;
-    const q = recipientSearch.toLowerCase();
+  // Repeated emails tracking: fetch contacts who have already received sent emails
+  const [sentRecipientContactIds, setSentRecipientContactIds] = useState<Set<string>>(new Set());
+  const [recipientFilter, setRecipientFilter] = useState<'unsent' | 'all' | 'already_sent'>('unsent');
+  const [repeatedWarning, setRepeatedWarning] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchSentRecipients = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('campaign_recipients')
+          .select('contact_id')
+          .eq('status', 'sent');
+
+        if (!error && data && isMounted) {
+          const ids = new Set<string>();
+          data.forEach((r) => {
+            if (r.contact_id) ids.add(r.contact_id);
+          });
+          setSentRecipientContactIds(ids);
+        }
+      } catch (err) {
+        console.warn('Failed to load sent recipients:', err);
+      }
+    };
+    fetchSentRecipients();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const isRepeatedContact = (c: Contact): boolean => {
+    return (
+      c.status === 'contacted' ||
+      c.status === 'replied' ||
+      sentRecipientContactIds.has(c.id)
+    );
+  };
+
+  // Contacts split into unsent vs repeated/already contacted
+  const unsentContacts = useMemo(() => {
     return contacts.filter(
+      (c) =>
+        !isRepeatedContact(c) &&
+        c.status !== 'unsubscribed' &&
+        c.status !== 'bounced' &&
+        c.status !== 'suppressed'
+    );
+  }, [contacts, sentRecipientContactIds]);
+
+  const alreadySentContacts = useMemo(() => {
+    return contacts.filter((c) => isRepeatedContact(c));
+  }, [contacts, sentRecipientContactIds]);
+
+  // Filtered contacts based on active view tab and search filter
+  const displayedContacts = useMemo(() => {
+    let list = contacts;
+    if (recipientFilter === 'unsent') {
+      list = unsentContacts;
+    } else if (recipientFilter === 'already_sent') {
+      list = alreadySentContacts;
+    }
+
+    if (!recipientSearch.trim()) return list;
+    const q = recipientSearch.toLowerCase();
+    return list.filter(
       (c) =>
         c.full_name?.toLowerCase().includes(q) ||
         c.email?.toLowerCase().includes(q) ||
         c.institution?.toLowerCase().includes(q) ||
         c.department?.toLowerCase().includes(q)
     );
-  }, [contacts, recipientSearch]);
+  }, [contacts, unsentContacts, alreadySentContacts, recipientFilter, recipientSearch]);
 
   const toggleSelectAll = () => {
-    if (selectedContactIds.length === filteredContacts.length) {
-      setSelectedContactIds([]);
+    if (displayedContacts.length === 0) return;
+    const allSelected = displayedContacts.every((c) => selectedContactIds.includes(c.id));
+    if (allSelected) {
+      setSelectedContactIds((prev) =>
+        prev.filter((id) => !displayedContacts.some((c) => c.id === id))
+      );
     } else {
-      setSelectedContactIds(filteredContacts.map((c) => c.id));
+      const ids = displayedContacts.map((c) => c.id);
+      setSelectedContactIds((prev) => Array.from(new Set([...prev, ...ids])));
     }
   };
 
-  const toggleContact = (id: string) => {
+  const toggleContact = (contact: Contact) => {
     setSelectedContactIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(contact.id) ? prev.filter((item) => item !== contact.id) : [...prev, contact.id]
     );
   };
 
-  // Selected contacts objects for validation
+  // Selected contacts objects for validation & breakdown analysis
   const selectedContacts = useMemo(() => {
     return contacts.filter((c) => selectedContactIds.includes(c.id));
   }, [contacts, selectedContactIds]);
+
+  // Breakdown: Correct (Unsent) vs Repeated (Already Sent)
+  const selectedCorrectContacts = useMemo(() => {
+    return selectedContacts.filter((c) => !isRepeatedContact(c));
+  }, [selectedContacts, sentRecipientContactIds]);
+
+  const selectedRepeatedContacts = useMemo(() => {
+    return selectedContacts.filter((c) => isRepeatedContact(c));
+  }, [selectedContacts, sentRecipientContactIds]);
 
   // Dynamic discipline matching & randomized templates
   const [dynamicMatching, setDynamicMatching] = useState(true);
@@ -444,11 +521,10 @@ export function CampaignWizard({
 
     if (!selectedAccount) {
       warnings.push('No active Gmail account selected. Campaign cannot send without an authorized sender.');
-    } else if (selectedAccount.sent_today_count + selectedContactIds.length > selectedAccount.daily_limit) {
+    } else if (selectedAccount.sent_today_count + selectedContactIds.length > Math.min(selectedAccount.daily_limit || 50, 50)) {
+      const remainingQuota = Math.max(0, Math.min(selectedAccount.daily_limit || 50, 50) - selectedAccount.sent_today_count);
       warnings.push(
-        `Recipient count (${selectedContactIds.length}) exceeds sender's remaining daily quota (${
-          selectedAccount.daily_limit - selectedAccount.sent_today_count
-        }). Emails will be staggered across daily resets.`
+        `Recipient count (${selectedContactIds.length}) exceeds sender's remaining daily quota (${remainingQuota} of 50/day max). Emails will be staggered across daily resets.`
       );
     }
 
@@ -499,10 +575,17 @@ export function CampaignWizard({
       setCurrentStep(1);
       return;
     }
-    if (selectedContactIds.length === 0) {
-      setFormError('Please select at least one recipient contact.');
+    // Filter out any repeated contacts automatically so user continues without error
+    const validContacts = contacts.filter(
+      (c) => selectedContactIds.includes(c.id) && !isRepeatedContact(c)
+    );
+    if (validContacts.length === 0) {
+      setFormError('All selected recipients are repeated. Please select at least one unsent recipient to continue.');
       setCurrentStep(2);
       return;
+    }
+    if (validContacts.length !== selectedContactIds.length) {
+      setSelectedContactIds(validContacts.map((c) => c.id));
     }
     if (!subject.trim() || !bodyText.trim()) {
       setFormError('Email subject and body content cannot be empty.');
@@ -732,11 +815,15 @@ export function CampaignWizard({
               onChange={(e) => setAccountId(e.target.value)}
             >
               {accounts.length === 0 && <option value="">No accounts connected</option>}
-              {accounts.map((acc) => (
-                <option key={acc.id} value={acc.id}>
-                  {acc.email} ({acc.status}) — {acc.daily_limit - acc.sent_today_count} left today
-                </option>
-              ))}
+              {accounts.map((acc) => {
+                const limit = Math.min(acc.daily_limit || 50, 50);
+                const remaining = Math.max(0, limit - acc.sent_today_count);
+                return (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.email} ({acc.status}) — {remaining} left today (max 50/day)
+                  </option>
+                );
+              })}
             </Select>
           </div>
 
@@ -773,19 +860,62 @@ export function CampaignWizard({
             <div>
               <h3 className="text-base font-bold text-gray-900">Step 2: Recipient Selection</h3>
               <p className="text-xs text-gray-500 mt-0.5">
-                Choose educator contacts to receive this personalized outreach wave.
+                Choose educator contacts for this outreach wave. Repeated emails to previously contacted recipients are automatically detected and skipped.
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={toggleSelectAll}>
-                {selectedContactIds.length === filteredContacts.length
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSelectAll}
+                disabled={displayedContacts.length === 0}
+              >
+                {displayedContacts.length > 0 &&
+                displayedContacts.every((c) => selectedContactIds.includes(c.id))
                   ? 'Deselect All'
-                  : `Select All (${filteredContacts.length})`}
+                  : `Select All (${displayedContacts.length})`}
               </Button>
-              <Badge variant="default" className="text-xs">
+              <Badge variant="default" className="text-xs font-semibold">
                 {selectedContactIds.length} Selected
               </Badge>
             </div>
+          </div>
+
+          {/* Quick Filter Tabs: Unsent Contacts (Default) vs All Contacts vs Repeated */}
+          <div className="flex flex-wrap items-center gap-2 border-b border-gray-100 pb-3">
+            <button
+              type="button"
+              onClick={() => setRecipientFilter('unsent')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                recipientFilter === 'unsent'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              ✉️ Unsent Contacts ({unsentContacts.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setRecipientFilter('all')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                recipientFilter === 'all'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              👥 All Contacts ({contacts.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setRecipientFilter('already_sent')}
+              className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+                recipientFilter === 'already_sent'
+                  ? 'bg-amber-600 text-white shadow-xs'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              ⚠️ Repeated / Already Sent ({alreadySentContacts.length})
+            </button>
           </div>
 
           <Input
@@ -794,20 +924,92 @@ export function CampaignWizard({
             onChange={(e) => setRecipientSearch(e.target.value)}
           />
 
+          {/* Verification & Repeated Email Analysis Summary Card */}
+          {selectedContactIds.length > 0 && (
+            <div className="rounded-2xl border border-gray-200 bg-gray-50/70 p-4 space-y-3 animate-fade-in shadow-xs">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-gray-200/60 pb-2.5">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs font-bold text-gray-900">Email Verification Summary</span>
+                </div>
+                <div className="flex items-center gap-2.5 text-xs">
+                  <span className="inline-flex items-center gap-1 font-semibold text-emerald-800 bg-emerald-100/90 px-2.5 py-1 rounded-md">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
+                    {selectedCorrectContacts.length} Correct Mails (Unsent)
+                  </span>
+                  <span
+                    className={`inline-flex items-center gap-1 font-semibold px-2.5 py-1 rounded-md ${
+                      selectedRepeatedContacts.length > 0
+                        ? 'text-amber-900 bg-amber-100/90 border border-amber-200'
+                        : 'text-gray-500 bg-gray-100'
+                    }`}
+                  >
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+                    {selectedRepeatedContacts.length} Repeated Mails
+                  </span>
+                </div>
+              </div>
+
+              {selectedRepeatedContacts.length > 0 ? (
+                <div className="rounded-xl border border-amber-200 bg-amber-50/90 p-3.5 text-xs text-amber-950 space-y-2">
+                  <div className="flex items-center gap-2 font-bold text-amber-900">
+                    <AlertCircle className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span>
+                      {selectedRepeatedContacts.length === 1
+                        ? `Repeated Mail: ${selectedRepeatedContacts[0].email} is repeated (already emailed before)`
+                        : `${selectedRepeatedContacts.length} Repeated Mails Detected (already emailed before):`}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5 pl-6">
+                    {selectedRepeatedContacts.map((c) => (
+                      <span
+                        key={c.id}
+                        className="inline-flex items-center gap-1 rounded-md bg-amber-200/80 px-2 py-0.5 font-mono text-[11px] font-semibold text-amber-900 border border-amber-300"
+                      >
+                        {c.email}
+                      </span>
+                    ))}
+                  </div>
+
+                  <p className="text-[11px] text-amber-800 pl-6 leading-relaxed">
+                    💡 <strong>Safe Auto-Skip Active:</strong> The repeated email(s) above will be automatically skipped. You can continue to the next steps without any condition or error — only the <strong>{selectedCorrectContacts.length} correct emails</strong> will be processed.
+                  </p>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 text-xs font-medium text-emerald-800 bg-emerald-50/60 p-2.5 rounded-xl border border-emerald-200">
+                  <Check className="h-4 w-4 text-emerald-600 shrink-0" />
+                  <span>All {selectedCorrectContacts.length} selected recipients are correct and unsent. Ready for outreach!</span>
+                </div>
+              )}
+            </div>
+          )}
+
           <div className="max-h-96 overflow-y-auto divide-y divide-gray-100 rounded-xl border border-gray-200">
-            {filteredContacts.length === 0 ? (
+            {displayedContacts.length === 0 ? (
               <div className="p-8 text-center text-xs text-gray-500">
-                No contacts match your query. Add contacts via the Contacts tab or CSV import first.
+                {recipientFilter === 'unsent'
+                  ? 'No unsent contacts match your search. All contacts have already been emailed or filtered out.'
+                  : recipientFilter === 'already_sent'
+                  ? 'No repeated / already contacted individuals found.'
+                  : 'No contacts match your query. Add contacts via the Contacts tab or CSV import first.'}
               </div>
             ) : (
-              filteredContacts.map((contact) => {
+              displayedContacts.map((contact) => {
                 const isSelected = selectedContactIds.includes(contact.id);
+                const isRepeated = isRepeatedContact(contact);
                 return (
                   <div
                     key={contact.id}
-                    onClick={() => toggleContact(contact.id)}
+                    onClick={() => toggleContact(contact)}
                     className={`flex items-center justify-between p-3 transition-colors cursor-pointer ${
-                      isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'
+                      isRepeated
+                        ? isSelected
+                          ? 'bg-amber-50/60 border-l-4 border-l-amber-500'
+                          : 'bg-amber-50/20 hover:bg-amber-50/40 border-l-4 border-l-amber-300'
+                        : isSelected
+                        ? 'bg-blue-50/50'
+                        : 'hover:bg-gray-50'
                     }`}
                   >
                     <div className="flex items-center gap-3">
@@ -815,10 +1017,27 @@ export function CampaignWizard({
                         type="checkbox"
                         checked={isSelected}
                         onChange={() => {}}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        className={`h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer`}
                       />
                       <div>
-                        <p className="text-xs font-semibold text-gray-900">{contact.full_name}</p>
+                        <div className="flex items-center gap-2">
+                          <p
+                            className={`text-xs font-semibold ${
+                              isRepeated ? 'text-gray-800' : 'text-gray-900'
+                            }`}
+                          >
+                            {contact.full_name}
+                          </p>
+                          {isRepeated ? (
+                            <Badge variant="warning" className="text-[10px] py-0 px-1.5 font-bold">
+                              Repeated (Already Sent)
+                            </Badge>
+                          ) : (
+                            <Badge variant="success" className="text-[10px] py-0 px-1.5 font-bold">
+                              Unsent
+                            </Badge>
+                          )}
+                        </div>
                         <p className="text-[11px] font-mono text-gray-500">{contact.email}</p>
                       </div>
                     </div>
@@ -842,6 +1061,28 @@ export function CampaignWizard({
                   setFormError('Please select at least one recipient.');
                   return;
                 }
+                if (selectedCorrectContacts.length === 0) {
+                  setFormError(
+                    `All selected recipients (${selectedRepeatedContacts
+                      .map((c) => c.email)
+                      .join(', ')}) are repeated. Please select at least one unsent recipient to continue.`
+                  );
+                  return;
+                }
+
+                // Automatically take only the correct unsent contacts
+                const correctIds = selectedCorrectContacts.map((c) => c.id);
+                setSelectedContactIds(correctIds);
+
+                if (selectedRepeatedContacts.length > 0) {
+                  setTemplateActionNotice(
+                    `Skipped ${selectedRepeatedContacts.length} repeated email(s) (${selectedRepeatedContacts
+                      .map((c) => c.email)
+                      .join(', ')}). Proceeding with ${selectedCorrectContacts.length} correct email(s).`
+                  );
+                  setTimeout(() => setTemplateActionNotice(null), 5000);
+                }
+
                 setFormError(null);
                 setCurrentStep(3);
               }}

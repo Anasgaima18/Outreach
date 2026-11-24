@@ -127,11 +127,34 @@ export function useCampaigns() {
 
       if (contactError) throw contactError;
 
+      // Check for repeated contacts: automatically filter them out and take only unsent contacts
+      const { data: sentRecips } = await supabase
+        .from('campaign_recipients')
+        .select('contact_id')
+        .eq('status', 'sent')
+        .in('contact_id', input.recipientContactIds);
+
+      const sentContactIds = new Set((sentRecips || []).map((r) => r.contact_id));
+      const validUnsentContacts = (selectedContacts || []).filter(
+        (c) => c.status !== 'contacted' && c.status !== 'replied' && !sentContactIds.has(c.id)
+      );
+      const repeatedContacts = (selectedContacts || []).filter(
+        (c) => c.status === 'contacted' || c.status === 'replied' || sentContactIds.has(c.id)
+      );
+
+      if (validUnsentContacts.length === 0) {
+        const repeatedEmails = repeatedContacts.map((c) => c.email).join(', ');
+        return {
+          success: false,
+          error: `All selected recipient(s) (${repeatedEmails}) are repeated and have already received emails before. Please select at least one new unsent recipient.`,
+        };
+      }
+
       const baseSchedule = input.scheduledAt ? new Date(input.scheduledAt) : new Date();
       const followUpDelayDays = input.followUpDelayDays ?? 3;
 
-      // 3. Insert campaign_recipients
-      const recipientInserts = (selectedContacts || []).map((contact, idx) => {
+      // 3. Insert campaign_recipients for valid unsent contacts only (repeated are skipped without error)
+      const recipientInserts = validUnsentContacts.map((contact, idx) => {
         // Stagger schedule by random delay (e.g. 20-60s per contact)
         const delaySeconds = idx * ((input.minDelaySeconds ?? 20) + Math.floor(Math.random() * 15));
         const scheduledTime = new Date(baseSchedule.getTime() + delaySeconds * 1000).toISOString();

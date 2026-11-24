@@ -260,15 +260,12 @@ export function AccountsPage() {
                           await updateDailyLimit(acc.id, Number(e.target.value));
                         }}
                         className="rounded border border-gray-200 bg-white px-1.5 py-0.5 text-[11px] font-semibold text-blue-700 hover:border-blue-400 cursor-pointer shadow-2xs"
-                        title="Adjust daily send limit for this account"
+                        title="Adjust daily send limit for this account (max 50/day)"
                       >
+                        <option value={10}>10/day</option>
                         <option value={20}>20/day</option>
-                        <option value={50}>50/day</option>
-                        <option value={100}>100/day</option>
-                        <option value={150}>150/day</option>
-                        <option value={200}>200/day</option>
-                        <option value={300}>300/day</option>
-                        <option value={500}>500/day (Max)</option>
+                        <option value={35}>35/day</option>
+                        <option value={50}>50/day (Max Limit)</option>
                       </select>
                     </div>
                     <span>

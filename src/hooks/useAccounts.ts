@@ -73,7 +73,8 @@ export function useAccounts() {
     newLimit: number
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      const sanitized = Math.max(1, Math.min(newLimit, 500));
+      // Strictly enforce daily restriction of maximum 50 emails per sender account per day
+      const sanitized = Math.max(1, Math.min(newLimit, 50));
       const { error: updateErr } = await supabase
         .from('connected_accounts')
         .update({ daily_limit: sanitized, updated_at: new Date().toISOString() })
@@ -92,7 +93,8 @@ export function useAccounts() {
     newLimit: number
   ): Promise<{ success: boolean; error?: string }> => {
     try {
-      const sanitized = Math.max(1, Math.min(newLimit, 500));
+      // Strictly enforce daily restriction of maximum 50 emails per sender account per day
+      const sanitized = Math.max(1, Math.min(newLimit, 50));
       const { error: updateErr } = await supabase
         .from('connected_accounts')
         .update({ daily_limit: sanitized, updated_at: new Date().toISOString() })
