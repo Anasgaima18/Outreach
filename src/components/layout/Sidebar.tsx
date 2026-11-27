@@ -10,6 +10,7 @@ import {
   Settings,
   GraduationCap,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
@@ -27,6 +28,7 @@ export type ViewType =
 interface SidebarProps {
   currentView: ViewType;
   onNavigate: (view: ViewType) => void;
+  onLogout?: () => void;
 }
 
 interface NavItem {
@@ -47,16 +49,13 @@ const navItems: NavItem[] = [
   { id: 'settings', label: 'Settings', icon: Settings },
 ];
 
-export function Sidebar({ currentView, onNavigate }: SidebarProps) {
+export function Sidebar({ currentView, onNavigate, onLogout }: SidebarProps) {
   return (
     <aside className="flex h-screen w-64 flex-col border-r border-gray-200 bg-white select-none">
       {/* Brand Header */}
       <div className="flex h-16 items-center gap-3 border-b border-gray-200 px-6">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-950 p-1.5 shadow-sm">
-          <picture>
-            <source srcSet="/email-logo-on-dark.webp" type="image/webp" />
-            <img src="/email-logo-on-dark.webp" alt="GamifyTL Logo" className="h-6 w-6 object-contain" />
-          </picture>
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-white p-1 border border-gray-100 shadow-2xs ring-2 ring-red-50">
+          <img src="/portal-logo.webp" alt="GamifyTL Logo" className="h-7 w-7 object-contain" />
         </div>
         <div>
           <span className="text-base font-bold text-gray-900 tracking-tight">GamifyTL</span>
@@ -144,6 +143,18 @@ export function Sidebar({ currentView, onNavigate }: SidebarProps) {
             Interactive classroom games with 0 app installs for university professors.
           </p>
         </div>
+
+        {onLogout && (
+          <button
+            type="button"
+            onClick={onLogout}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-red-200 bg-red-50/70 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100 hover:text-red-800 transition-colors shadow-2xs"
+            title="Lock Portal and Sign Out"
+          >
+            <LogOut className="h-3.5 w-3.5 text-red-600" />
+            <span>Lock Portal &amp; Sign Out</span>
+          </button>
+        )}
       </div>
     </aside>
   );

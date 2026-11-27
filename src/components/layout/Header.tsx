@@ -1,11 +1,13 @@
-import { Database, ShieldCheck } from 'lucide-react';
+import { Database, ShieldCheck, LogOut } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 
 interface HeaderProps {
   activeViewTitle: string;
+  onLogout?: () => void;
+  currentUser?: string;
 }
 
-export function Header({ activeViewTitle }: HeaderProps) {
+export function Header({ activeViewTitle, onLogout, currentUser }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 flex h-16 w-full items-center justify-between border-b border-gray-200 bg-white/95 px-6 backdrop-blur transition-all">
       <div className="flex items-center gap-3">
@@ -32,11 +34,27 @@ export function Header({ activeViewTitle }: HeaderProps) {
           <span>RLS Enforced</span>
         </Badge>
 
+        {currentUser && (
+          <div className="hidden xl:flex items-center gap-1.5 rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 max-w-[170px] truncate" title={currentUser}>
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shrink-0" />
+            <span className="truncate">{currentUser}</span>
+          </div>
+        )}
+
+        {onLogout && (
+          <button
+            type="button"
+            onClick={onLogout}
+            className="flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200 transition-colors shadow-2xs"
+            title="Lock Portal and Sign Out"
+          >
+            <LogOut className="h-3.5 w-3.5 text-gray-500 hover:text-red-600" />
+            <span className="hidden sm:inline">Sign Out</span>
+          </button>
+        )}
+
         <div className="flex items-center gap-2 pl-2 border-l border-gray-200">
-          <picture>
-            <source srcSet="/email-logo.webp" type="image/webp" />
-            <img src="/email-logo.webp" alt="GamifyTL" className="h-8 w-8 rounded-full object-contain p-0.5 border border-gray-200 bg-white shadow-xs" />
-          </picture>
+          <img src="/portal-logo.webp" alt="GamifyTL" className="h-8 w-8 object-contain" />
         </div>
       </div>
     </header>
