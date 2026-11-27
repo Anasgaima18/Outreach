@@ -193,7 +193,7 @@ serve(async (req: Request) => {
   try {
     const body = await req.json().catch(() => ({}));
     const campaignId = body.campaign_id || null;
-    const batchSize = Math.min(Math.max(body.batch_size || 3, 1), 10);
+    const batchSize = Math.min(Math.max(body.batch_size || 10, 1), 50);
 
     // 1. Atomically claim queued recipients using SKIP LOCKED via database RPC
     const { data, error: claimError } = await supabase.rpc('claim_recipients_for_sending', {
@@ -533,6 +533,15 @@ serve(async (req: Request) => {
         const newRetryCount = (item.retry_count || 0) + 1;
         const now = new Date().toISOString();
 
+        const isAuthScopeError = errorMsg.toLowerCase().includes('insufficient authentication scopes');
+        if (isAuthScopeError) {
+          // Immediately flag account as needing re-authentication with required scopes
+          await supabase
+            .from('connected_accounts')
+            .update({ status: 'revoked', updated_at: now })
+            .eq('id', item.account_id);
+        }
+
         if (newRetryCount >= 3) {
           // Permanent failure after 3 retries
           await supabase
@@ -572,6 +581,29 @@ serve(async (req: Request) => {
 
         processedRecipientIds.add(item.recipient_id);
         failedCount++;
+      }
+    }
+
+    // Auto-complete campaigns that have no remaining queued or sending recipients
+    const affectedCampaignIds = Array.from(new Set(claimedItems.map((it) => it.campaign_id)));
+    for (const cid of affectedCampaignIds) {
+      const { data: remainingRecs } = await supabase
+        .from('campaign_recipients')
+        .select('id')
+        .eq('campaign_id', cid)
+        .in('status', ['queued', 'sending'])
+        .limit(1);
+
+      if (!remainingRecs || remainingRecs.length === 0) {
+        await supabase
+          .from('campaigns')
+          .update({
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', cid)
+          .eq('status', 'sending');
       }
     }
 

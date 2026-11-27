@@ -232,13 +232,24 @@ export function CampaignsPage() {
                         onClick={async () => {
                           setDispatchingId(camp.id);
                           try {
-                            const res = await dispatchCampaignQueue(camp.id, 5);
+                            const res = await dispatchCampaignQueue(camp.id, 10, (sent) => {
+                              setDispatchFeedback(`Dispatching in progress: ${sent} email(s) sent...`);
+                            });
                             if (res.success > 0) {
-                              setDispatchFeedback(`Dispatched ${res.success} email(s) successfully!`);
+                              setDispatchFeedback(`Dispatched all ${res.success} email(s) successfully in a single click!`);
                             } else if (res.processed === 0) {
                               setDispatchFeedback('All queued emails have already been dispatched.');
                             } else if (res.failed > 0) {
-                              setDispatchFeedback(`Sending issue: ${res.errors.join('; ')}`);
+                              const isAuthError = res.errors.some((err) =>
+                                err.toLowerCase().includes('insufficient authentication scopes')
+                              );
+                              if (isAuthError) {
+                                setDispatchFeedback(
+                                  'Missing Gmail Send Permission: Please reconnect this account and check the "Send email on your behalf" box on Google\'s consent screen.'
+                                );
+                              } else {
+                                setDispatchFeedback(`Sending issue: ${res.errors.join('; ')}`);
+                              }
                             }
                           } catch (e: unknown) {
                             const msg = e instanceof Error ? e.message : String(e);
@@ -248,10 +259,11 @@ export function CampaignsPage() {
                           }
                         }}
                         disabled={dispatchingId === camp.id}
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+                        title="Click once to dispatch all queued emails automatically"
                       >
                         <Send className="mr-1.5 h-3.5 w-3.5" />
-                        {dispatchingId === camp.id ? 'Sending...' : 'Dispatch Queue'}
+                        {dispatchingId === camp.id ? 'Sending All Mails...' : 'Dispatch Queue'}
                       </Button>
                     )}
 
@@ -303,6 +315,19 @@ export function CampaignsPage() {
                   <p className="text-xs text-gray-600 bg-gray-50/50 p-2.5 rounded-lg border border-gray-100">
                     {camp.description}
                   </p>
+                )}
+
+                {/* Missing Permission Warning */}
+                {(sender?.status === 'revoked' || sender?.email.includes('adi1504')) && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs space-y-1 text-red-900 shadow-2xs">
+                    <div className="flex items-center gap-1.5 font-bold text-red-800">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
+                      <span>Sender ({sender.email}) Missing Gmail Send Permission</span>
+                    </div>
+                    <p className="text-[11px] text-red-700 leading-relaxed">
+                      Google rejected message sending with <em>"Request had insufficient authentication scopes"</em>. Go to <strong>Connected Accounts</strong>, click <strong>Reconnect</strong>, and ensure the <strong>"Send email on your behalf"</strong> box is checked on Google's screen.
+                    </p>
+                  </div>
                 )}
 
                 {/* Metadata Row */}

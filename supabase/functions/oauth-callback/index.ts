@@ -96,7 +96,19 @@ serve(async (req: Request) => {
     if (!refresh_token) {
       console.warn('Google did not return a refresh_token. User may need prompt=consent.');
       return Response.redirect(
-        `${appUrl}/accounts?status=error&message=No+refresh+token+returned.+Please+re-authenticate+with+consent.`,
+        `${appUrl}/?view=accounts&status=error&message=No+refresh+token+returned.+Please+re-authenticate+with+consent.`,
+        303
+      );
+    }
+
+    // Strictly verify that user granted gmail.send scope on Google consent screen
+    const grantedScopes = tokenData.scope || '';
+    if (!grantedScopes.includes('gmail.send')) {
+      console.error('User did not grant gmail.send scope. Granted:', grantedScopes);
+      return Response.redirect(
+        `${appUrl}/?view=accounts&status=error&message=${encodeURIComponent(
+          'Permission missing: You must check the "Send email on your behalf" box on Google\'s consent screen to send outreach emails.'
+        )}`,
         303
       );
     }

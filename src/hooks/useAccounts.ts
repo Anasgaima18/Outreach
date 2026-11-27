@@ -113,6 +113,8 @@ export function useAccounts() {
     userId?: string;
     clientId?: string;
     redirectUri?: string;
+    loginHint?: string;
+    prompt?: string;
   }): string => {
     const userId = customParams?.userId || 'default-user';
     const clientId =
@@ -128,6 +130,8 @@ export function useAccounts() {
       userId,
       clientId,
       redirectUri,
+      loginHint: customParams?.loginHint,
+      prompt: customParams?.prompt,
     });
   };
 

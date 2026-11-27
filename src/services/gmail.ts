@@ -13,6 +13,8 @@ export interface GoogleAuthUrlParams {
   redirectUri: string;
   clientId: string;
   stateNonce?: string;
+  loginHint?: string;
+  prompt?: string;
 }
 
 export interface OAuthStatePayload {
@@ -80,15 +82,21 @@ export function getGoogleAuthUrl(params: GoogleAuthUrlParams): string {
 
   const state = generateOAuthState(params.userId, params.stateNonce);
 
-  const queryParams = new URLSearchParams({
+  const queryObj: Record<string, string> = {
     client_id: params.clientId,
     redirect_uri: params.redirectUri,
     response_type: 'code',
     scope: GMAIL_OAUTH_SCOPES,
     access_type: 'offline',
-    prompt: 'consent',
+    prompt: params.prompt || 'consent',
     state,
-  });
+  };
+
+  if (params.loginHint) {
+    queryObj.login_hint = params.loginHint;
+  }
+
+  const queryParams = new URLSearchParams(queryObj);
 
   return `https://accounts.google.com/o/oauth2/v2/auth?${queryParams.toString()}`;
 }

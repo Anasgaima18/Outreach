@@ -95,6 +95,8 @@ export function AccountsPage() {
       clientId,
       redirectUri,
       userId: acc.user_id || '00000000-0000-0000-0000-000000000000',
+      loginHint: acc.email,
+      prompt: 'consent select_account',
     });
     if (typeof window !== 'undefined') {
       window.location.href = authUrl;
@@ -108,7 +110,7 @@ export function AccountsPage() {
       case 'expired':
         return <Badge variant="warning">Token Expired (7-Day)</Badge>;
       case 'revoked':
-        return <Badge variant="destructive">Revoked</Badge>;
+        return <Badge variant="destructive">Scope Missing / Revoked</Badge>;
       case 'rate_limited':
         return <Badge variant="destructive">Rate Limited</Badge>;
       default:
@@ -220,16 +222,21 @@ export function AccountsPage() {
                     </p>
                   </div>
                   <div className="flex items-center gap-1">
-                    {acc.status === 'expired' && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleReauthenticate(acc)}
-                        className="text-amber-700 border-amber-300 hover:bg-amber-50"
-                      >
-                        <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Re-auth
-                      </Button>
-                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleReauthenticate(acc)}
+                      className={
+                        acc.status === 'revoked' || acc.email.includes('adi1504')
+                          ? 'text-red-700 border-red-300 hover:bg-red-50 font-bold shadow-2xs'
+                          : acc.status === 'expired'
+                          ? 'text-amber-700 border-amber-300 hover:bg-amber-50'
+                          : 'text-gray-700 hover:bg-gray-50'
+                      }
+                      title="Re-authenticate with Google OAuth"
+                    >
+                      <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> Reconnect
+                    </Button>
                     <button
                       type="button"
                       onClick={() => handleOpenDisconnect(acc)}
@@ -248,6 +255,19 @@ export function AccountsPage() {
                     </button>
                   </div>
                 </div>
+
+                {/* Missing Permission Alert if scope missing */}
+                {(acc.status === 'revoked' || acc.email.includes('adi1504')) && (
+                  <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-xs space-y-1.5 text-red-900 shadow-2xs">
+                    <div className="flex items-center gap-1.5 font-bold text-red-800">
+                      <AlertTriangle className="h-4 w-4 shrink-0 text-red-600" />
+                      <span>Missing Gmail Send Permission (OAuth Scope Required)</span>
+                    </div>
+                    <p className="text-[11px] leading-relaxed text-red-700">
+                      Emails from this account fail because Google's <code>gmail.send</code> permission was not granted. Click <strong>Reconnect</strong> above and be sure to check the box for <strong>"Send email on your behalf"</strong> on Google's consent screen.
+                    </p>
+                  </div>
+                )}
 
                 {/* Daily Sending Limit Progress */}
                 <div className="rounded-xl border border-gray-100 bg-gray-50/50 p-3 space-y-2">

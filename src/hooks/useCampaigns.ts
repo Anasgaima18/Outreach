@@ -221,12 +221,21 @@ export function useCampaigns() {
 
       if (updateError) throw updateError;
 
-      // If send_now, trigger first batch send in background
+      // If send_now, continuously dispatch queue until all 50 emails are sent
       if (action === 'send_now') {
         try {
-          await triggerSendingQueue({ campaignId, batchSize: 5 });
+          let count = 0;
+          let sentSoFar = 0;
+          while (count < 10 && sentSoFar < 50) {
+            count++;
+            const res = await triggerSendingQueue({ campaignId, batchSize: 10 });
+            sentSoFar += res.success;
+            if (res.processed === 0 || (res.success === 0 && res.failed > 0)) {
+              break;
+            }
+          }
         } catch (queueErr) {
-          console.warn('Initial micro-batch send trigger note:', queueErr);
+          console.warn('Initial send trigger note:', queueErr);
         }
       }
 
@@ -357,10 +366,56 @@ export function useCampaigns() {
     cancelCampaign,
     deleteCampaign,
     getCampaignRecipients,
-    dispatchCampaignQueue: async (campaignId?: string, batchSize = 5) => {
-      const res = await triggerSendingQueue({ campaignId, batchSize });
+    dispatchCampaignQueue: async (
+      campaignId?: string,
+      batchSize = 10,
+      onProgress?: (sentCount: number) => void
+    ) => {
+      let totalProcessed = 0;
+      let totalSuccess = 0;
+      let totalFailed = 0;
+      const allErrors: string[] = [];
+      let iterations = 0;
+      const maxIterations = 15; // Up to 50+ emails dispatched in a single click without stopping
+
+      while (iterations < maxIterations) {
+        iterations++;
+        const res = await triggerSendingQueue({ campaignId, batchSize });
+        totalProcessed += res.processed;
+        totalSuccess += res.success;
+        totalFailed += res.failed;
+        if (res.errors && res.errors.length > 0) {
+          allErrors.push(...res.errors);
+        }
+
+        if (onProgress) {
+          onProgress(totalSuccess);
+        }
+
+        // Stop if queue is empty (0 items claimed or ready)
+        if (res.processed === 0) {
+          break;
+        }
+
+        // If rate limit or auth failure halted the batch without any success
+        if (res.success === 0 && res.failed > 0) {
+          break;
+        }
+
+        // Stop if daily 50 email limit reached
+        if (totalSuccess >= 50) {
+          break;
+        }
+      }
+
       await fetchCampaigns();
-      return res;
+      return {
+        processed: totalProcessed,
+        success: totalSuccess,
+        failed: totalFailed,
+        suppressed: 0,
+        errors: allErrors,
+      };
     },
   };
 }
